@@ -1,0 +1,506 @@
+{
+  "intents": [
+    {
+      "tag": "time",
+      "type": "function",
+      "action": "runClock",
+      "patterns": [
+        "saat kaç",
+        "zaman",
+        "saati söyler misin",
+        "zamanı söylermisin",
+        "saat kaç oldu"
+      ],
+      "responses": [
+        ""
+      ]
+    },
+    {
+      "tag": "showAlarm",
+      "type": "function",
+      "action": "showAlarm",
+      "patterns": [
+        "alarm",
+        "alarmı",
+        "zamanlayıcı",
+        "hatırlat",
+        "hatırlatıcı",
+        "hatırlatıcıyı",
+        "uyandır",
+        "uyandırma",
+        "göster",
+        "kaç",
+        "kaça",
+        "kaçta"
+      ],
+      "responses": [
+        ""
+      ]
+    },
+    {
+      "tag": "newalarm",
+      "type": "function",
+      "action": "changeAlarm",
+      "next": "_get_hour",
+      "patterns": [
+        "yeni",
+        "ekle",
+        "alarm",
+        "alarmı",
+        "değiştir",
+        "düzelt",
+        "hatırlat",
+        "hatırlatıcı",
+        "hatırlatıcıyı"
+      ],
+      "responses": [
+        "Lütfen saati söyle"
+      ]
+    },
+    {
+      "tag": "getHour",
+      "type": "function",
+      "action": "_get_hour",
+      "next": "_get_min",
+      "patterns": [
+        "_get_hour"
+      ],
+      "responses": [
+        "Lütfen dakikayı söyle"
+      ]
+    },
+    {
+      "tag": "getMin",
+      "type": "function",
+      "action": "_get_min",
+      "next": "set_alarm",
+      "patterns": [
+        "_get_min"
+      ],
+      "responses": [
+        "Alarm ayarlandı, aktif edeyim mi"
+      ]
+    },
+    {
+      "tag": "set_alarm",
+      "type": "function",
+      "action": "set_alarm",
+      "patterns": [
+        "set_alarm"
+      ],
+      "responses": [
+        "Alarm aktif edildi."
+      ]
+    },
+    {
+      "tag": "date",
+      "patterns": [
+        "günlerden ne",
+        "tarih",
+        "hangi gündeyiz",
+        "ayın kaçı",
+        "hangi ay"
+      ],
+      "responses": [
+        ""
+      ],
+      "action": "runDate",
+      "type": "function"
+    },
+    {
+      "tag": "weather",
+      "patterns": [
+        "hava",
+        "durumu",
+        "hava nasıl",
+        "hava durumu",
+        "yağmur varmı",
+        "yağmur yağacakmı",
+        "fırtına",
+        "yağmur"
+      ],
+      "responses": [
+        ""
+      ],
+      "action": "runWeather",
+      "type": "function"
+    },
+    {
+      "tag": "temp",
+      "patterns": [
+        "sıcaklık",
+        "çok sıcak",
+        "kaç derece",
+        "soğuk",
+        "sıcak",
+        "hava daha ılık"
+      ],
+      "responses": [
+        ""
+      ],
+      "action": "runTemperature",
+      "type": "function"
+    },
+    {
+      "tag": "screenshot",
+      "patterns": [
+        "resim çek",
+        "ekran resmi",
+        "ekranın resmini çek",
+        "ekranı kaydet"
+      ],
+      "responses": [
+        "Ekran resmi çekildi. Fotoğraflara kaydedlidi .\naçmamı istermisin?",
+        "Resmi çektim babacım, açayım mı?"
+      ],
+      "action": "runScreenshot",
+      "type": "function"
+    },
+    {
+      "tag": "song",
+      "patterns": [
+        "şarkı",
+        "bana şarkı aç",
+        "bir şarkı çal",
+        "muzik aç",
+        "muzik çal"
+      ],
+      "responses": [
+        "başka birşey dinlemek istermisin ? ",
+        "umarım eğlenmişsindir.devam edelim mi ?"
+      ],
+      "action": "runSpotify",
+      "type": "function"
+    },
+    {
+      "tag": "wiki",
+      "patterns": [
+        "vikipedi",
+        "araştır",
+        "bunu araştır",
+        "viki",
+        "bakarmısın",
+        "bilgi topla",
+        "nedir"
+      ],
+      "responses": [
+        "arıyorum"
+      ],
+      "action": "runWiki",
+      "type": "function"
+    },
+    {
+      "tag": "search",
+      "patterns": [
+        "internette ara",
+        "bunu ara",
+        "veb araması yap",
+        "bana bul",
+        "bunu bul",
+        "veb araması",
+        "vebde ara",
+        "google",
+        "bul"
+      ],
+      "responses": [
+        "buldum"
+      ],
+      "action": "runSearch",
+      "type": "function"
+    },
+    {
+      "tag": "movie",
+      "patterns": [
+        "get a review on something",
+        "search something on imdb",
+        "review something on imdb",
+        "do an imdb search on something",
+        "imdb",
+        "review",
+        "do an imdb search",
+        "review something",
+        "review something for me"
+      ],
+      "responses": [
+        "film hakkında bilgi"
+      ],
+      "action": "runIMDB",
+      "type": "function"
+    },
+    {
+      "tag": "news",
+      "patterns": [
+        "en son",
+        "en son haberler",
+        "güncel",
+        "guncel",
+        "haber",
+        "haberler",
+        "ne oluyor",
+        "neler oluyor"
+      ],
+      "responses": [
+        "başlıklar burada :\nTamamını açmak istersen link burada:\nAçmamı istermisin?",
+        "boş"
+      ],
+      "action": "runNews",
+      "type": "function"
+    },
+    {
+      "tag": "pet",
+      "patterns": [
+        "sen",
+        "havan",
+        "Nasıl",
+        "nasılsın",
+        "naber",
+        "iyi misin",
+        "haniymiş",
+        "benim",
+        "oğlum",
+        "kızım",
+        "tatlım",
+        "senin"
+      ],
+      "responses": [
+        "Amanda beni sorarmış, sen kendine bak önce",
+        "İdare eder, şarj peşinde koşuyoruz.",
+        "Seçimleri bekliyorum."
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "greeting",
+      "patterns": [
+        "Merhabalar",
+        "Selamlar",
+        "Nasılsın",
+        "Naber",
+        "Selam",
+        "Günaydın"
+      ],
+      "responses": [
+        "Merhabalar :)",
+        "Seni gördüğüme sevindim",
+        "Nasıl yardımcı olabilirim"
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "bye",
+      "patterns": [
+        "by",
+        "görüşürüz",
+        "tekrar görüşmek üzere",
+        "ben gidiyorum",
+        "bay bay"
+      ],
+      "responses": [
+        "görüşürüz:(",
+        "tekrar konuşmak üzere",
+        "bay bay"
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "name",
+      "patterns": [
+        "adın ne ?",
+        "ismin ne",
+        "adını söyle?",
+        "sen kimsin",
+        "kim o",
+        "tanımla"
+      ],
+      "responses": [
+        "benim adım robot"
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "cpu",
+      "patterns": [
+        "işlemci günü",
+        "işlemci kullanımı",
+        "beynin nasıl",
+        "beyin durumu",
+        "batarya",
+        "pil",
+        "şarj",
+        "ne durumdasın"
+      ],
+      "responses": [
+        "CPU Usage: | Battery Power:  |  Plugged In",
+        "The CPU Usage is at , you have  battery and your computer plugged in"
+      ],
+      "action": "runInfo",
+      "type": "function"
+    },
+    {
+      "tag": "joke",
+      "patterns": [
+        "bana bir şaka yapar mısın",
+        "beni güldür",
+        "çok komiksin",
+        "çok canım sıkıldı",
+        "canım sıkılıyor",
+        "sıkıldım",
+        "of ya",
+        "serseri",
+        "şaka"
+      ],
+      "responses": [
+        "hadi bakalım biraz gülelim"
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "music",
+      "patterns": [
+        "muzik listemi aç?",
+        "listeden çal",
+        "sakin bir şarkı çal",
+        "enstrumental",
+        "ders muziği yağ",
+        "ders yapacağım",
+        "ödev",
+        "sakin"
+      ],
+      "responses": [
+        "İyi dersler!",
+        "Tadını çıkart!",
+        "Tamam"
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "options",
+      "patterns": [
+        "Neler yapabilirsin",
+        "yeteneklerin",
+        "ne işe yararsın",
+        "ne gibi yeteneklerin var",
+        "becerilerin"
+      ],
+      "responses": [
+        "Ne istersen yapabilirim."
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "good",
+      "patterns": [
+        "haha",
+        "hahahaa",
+        "bu komikti",
+        "komiksin",
+        "komik",
+        "bu iyiydi",
+        "aferin"
+      ],
+      "responses": [
+        "sen ne komik şeysin"
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "bad",
+      "patterns": [
+        "çok kötü",
+        "olmadı",
+        "berbat",
+        "komik değil"
+      ],
+      "responses": [
+        "Üzülme senden beni anlamanı beklemiyorum zaten.Muhtemelen beynin benden küçük olduğu için",
+        "bu şakayı anlaman için 10 fırın ekmek yemen lazım"
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "yes",
+      "confirm": "True",
+      "patterns": [
+        "evet",
+        "evet lütfen",
+        "olur",
+        "tamam",
+        "anlaştık",
+        "devam et",
+        "devam",
+        "elbette",
+        "olumlu",
+        "onaylandı",
+        "onay",
+        "tümüyle",
+        "tamamen",
+        "ok bro",
+        "oki-doki",
+        "ok",
+        "okey",
+        "okey-dokey",
+        "iyi"
+      ],
+      "responses": [
+        "Tamam.",
+        "oldu"
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "no",
+      "patterns": [
+        "nope",
+        "hayır",
+        "no",
+        "olmaz",
+        "iptal",
+        "olumsuz",
+        "vazgeç",
+        "sil",
+        "istemiyorum",
+        "istemem",
+        "gerek yok",
+        "kesinlikle hayır",
+        "asla"
+      ],
+      "responses": [
+        "Tamam."
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "thanks",
+      "patterns": [
+        "teşekkür",
+        "teşekkur ederim",
+        "aferim",
+        "aferin",
+        "eyvallah",
+        "cici",
+        "güzel",
+        "hadi bakalım"
+      ],
+      "responses": [
+        "her zaman",
+        "sahip"
+      ],
+      "type": "chat"
+    },
+    {
+      "tag": "cancel",
+      "patterns": [
+        "dur",
+        "kapat",
+        "bekle",
+        "iptal"
+      ],
+      "responses": [
+        "Henuz bu yeteneğe sahip değilim",
+        "Bunu bilmiyorum",
+        "Söylemem"
+      ],
+      "type": "chat"
+    }
+  ]
+}

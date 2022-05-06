@@ -1,0 +1,237 @@
+[
+  {
+    "type": "chat",
+    "msg": [
+      "selam",
+      "merhaba",
+      "naber",
+      "robot"
+    ],
+    "text": "merhaba!",
+    "required_words": []
+  },
+  {
+    "type": "chat",
+    "msg": [
+      "günaydın",
+      "iyi akşamlar",
+      "akşamlar",
+      "iyi",
+      "günler"
+    ],
+    "text": "sanada selam!",
+    "required_words": []
+  },
+  {
+    "type": "chat",
+    "confirm": "True",
+    "msg": [
+      "evet",
+      "olur",
+      "tamam",
+      "hallet",
+      "okey",
+      "ok",
+      "eyvallah"
+    ],
+    "text": "tamamdır",
+    "required_words": []
+  },
+  {
+    "type": "chat",
+    "msg": [
+      "hayır",
+      "olmaz",
+      "iptal",
+      "çık",
+      "vazgeç",
+      "vazgeçtim",
+      "sil"
+    ],
+    "text": "tamamdır",
+    "required_words": []
+  },
+  {
+    "type": "chat",
+    "msg": [
+      "kapat",
+      "hoşçakal",
+      "güle",
+      "güle güle",
+      "görüşürüz"
+    ],
+    "text": "ba bay!",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "runWeather",
+    "msg": [
+      "bu",
+      "gün",
+      "hava",
+      "hava durumu",
+      "nasıl",
+      "olacak",
+      "yağmur",
+      "yagacak",
+      "sıcak",
+      "sıcaklık"
+    ],
+    "text": "Hava durumuna bakıyorum",
+    "required_words": [
+      "hava"
+    ]
+  },
+  {
+    "type": "function",
+    "action": "runClock",
+    "msg": [
+      "saat",
+      "zaman",
+      "kaç",
+      "hangi",
+      "sabah",
+      "akşam",
+      "öğlen",
+      "gece"
+    ],
+    "text": "Saate bakıyorum.",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "show_alarm",
+    "msg": [
+      "alarm",
+      "alarmı",
+      "zamanlayıcı",
+      "hatırlat",
+      "hatırlatıcı",
+      "hatırlatıcıyı",
+      "uyandır",
+      "uyandırma",
+      "göster",
+      "kaç",
+      "kaça",
+      "kaçta"
+    ],
+    "text": "alarma bakıyorum.",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "change_alarm",
+    "next": "_get_hour",
+    "msg": [
+      "yeni",
+      "ekle",
+      "alarm",
+      "alarmı",
+      "değiştir",
+      "düzelt",
+      "hatırlat"
+    ],
+    "text": "lütfen saati söyle.",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "_get_hour",
+    "next": "_get_min",
+    "msg": [
+      "_get_hour"
+    ],
+    "text": "lütfen dakikayı söyle.",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "_get_min",
+    "next": "set_alarm",
+    "msg": [
+      "_get_min"
+    ],
+    "text": "Alarm ayarlandı, aktif edeyim mi?",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "set_alarm",
+    "msg": [
+      "set_alarm"
+    ],
+    "text": "Alarm kuruluyor!",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "enable_alarm",
+    "msg": [
+      "alarm",
+      "alarmı",
+      "hatırlat",
+      "hatırlatıcı",
+      "hatırlatıcıyı",
+      "uyandır",
+      "uyandırma",
+      "aktive",
+      "kur",
+      "ayarla",
+      "aç"
+    ],
+    "text": "Alarm kuruldu!",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "disable_alarm",
+    "msg": [
+      "alarm",
+      "alarmı",
+      "hatırlat",
+      "hatırlatıcı",
+      "hatırlatıcıyı",
+      "uyandır",
+      "uyandırma",
+      "kapat",
+      "alarm",
+      "deaktive",
+      "iptal",
+      "sil",
+      "sustur",
+      "kaldır"
+    ],
+    "text": "Alarm kapatıldı!",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "ask_wiki",
+    "next": "_search_wiki",
+    "msg": [
+      "sana",
+      "bir",
+      "soru",
+      "sorum",
+      "cevap",
+      "cevapla",
+      "cevaplarmısın",
+      "araştır",
+      "ara",
+      "ararmısın",
+      "araştırırmısın",
+      "var"
+    ],
+    "text": "ne aramak istiyorsun.",
+    "required_words": []
+  },
+  {
+    "type": "function",
+    "action": "_search_wiki",
+    "msg": [
+      "_search_wiki"
+    ],
+    "required_words": []
+  }
+]
