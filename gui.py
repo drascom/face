@@ -4,33 +4,84 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import cv2
 
-<<<<<<< HEAD
+class CameraThread(QThread):
+    ImageUpdate = pyqtSignal(QImage)
 
-=======
- 
->>>>>>> 3f7ab81 (init)
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ThreadActive = False
+        self.capture = None
+    def run(self):
+        self.ThreadActive = True
+        self.capture = cv2.VideoCapture(0)
+        print("kamera durum: ",self.capture.isOpened())  
+        while self.ThreadActive:
+            ret, frame = self.capture.read()
+            if ret:
+                Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                FlippedImage = cv2.flip(Image, 1)
+                ConvertToQtFormat = QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0],
+                                           QImage.Format_RGB888)
+                Pic = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+                self.ImageUpdate.emit(Pic)
+            else:
+                print("capture read olmadı")
+
+    def stop(self):
+        self.ThreadActive = False
+        self.capture.release()
+        print("kamera durum: ",self.capture.isOpened())   # self.wait()
+        self.quit()
+
+class MainGif(QLabel):
+    def __init__(self):
+        QLabel.__init__(self)
+        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        self.resize(800, 600)
+        self.pixmap = QPixmap("image.jpg")
+        self.setPixmap(self.pixmap)
+        self.MovieLabel.setScaledContents(True)
+
+
+class HomeScreen(QWidget):
+    change_screen = pyqtSignal(int)
+    def __init__(self):
+        super(HomeScreen, self).__init__()
+        self.VBL = QVBoxLayout()
+        self.GifArea = MainGif()
+        self.VBL.addWidget(self.GifArea) 
+
+class CameraScreen(QWidget):
+    change_screen = pyqtSignal(int)
+    def __init__(self):
+        super(CameraScreen, self).__init__()
+        self.CameraThread = CameraThread()
+        self.VBL = QVBoxLayout()
+        self.GifArea = MainGif()
+        self.VBL.addWidget(self.GifArea) 
+
+        self.HBL = QHBoxLayout()
+        self.VBL.addLayout(self.HBL)
+
+        
+        self.VideoOnBTN = QPushButton("Start")
+        self.VideoOnBTN.clicked.connect(self.start_camera)
+        self.HBL.addWidget(self.VideoOnBTN)
+
+        self.VideoOffBTN = QPushButton("Stop")
+        self.VideoOffBTN.clicked.connect(self.stop_camera)
+        self.HBL.addWidget(self.VideoOffBTN)
+        self.setLayout(self.VBL)
+
 class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.camera_status = False
-        self.CameraThread = CameraThread()
+       
 
         self.VBL = QVBoxLayout()
-<<<<<<< HEAD
 
-=======
-        self.test="fuck"
->>>>>>> 3f7ab81 (init)
-        self.FeedLabel = QLabel()
-        self.VBL.addWidget(self.FeedLabel)
-
-        self.VideoOnBTN = QPushButton("Start")
-        self.VideoOnBTN.clicked.connect(self.start_camera)
-        self.VBL.addWidget(self.VideoOnBTN)
-
-        self.VideoOffBTN = QPushButton("Stop")
-        self.VideoOffBTN.clicked.connect(self.stop_camera)
-        self.VBL.addWidget(self.VideoOffBTN)
+     
 
         self.button_status()
         self.play_gif('sleep')
@@ -68,34 +119,6 @@ class MainWindow(QWidget):
         movie.start()
 
 
-class CameraThread(QThread):
-    ImageUpdate = pyqtSignal(QImage)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.ThreadActive = False
-        self.capture = None
-    def run(self):
-        self.ThreadActive = True
-        self.capture = cv2.VideoCapture(0)
-        print("kamera durum: ",self.capture.isOpened())  
-        while self.ThreadActive:
-            ret, frame = self.capture.read()
-            if ret:
-                Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                FlippedImage = cv2.flip(Image, 1)
-                ConvertToQtFormat = QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0],
-                                           QImage.Format_RGB888)
-                Pic = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
-                self.ImageUpdate.emit(Pic)
-            else:
-                print("capture read olmadı")
-
-    def stop(self):
-        self.ThreadActive = False
-        self.capture.release()
-        print("kamera durum: ",self.capture.isOpened())   # self.wait()
-        self.quit()
 
 
 if __name__ == "__main__":
