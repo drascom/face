@@ -1,9 +1,9 @@
 import cv2
 
 # name = 'Simge' #replace with your name
-name =input('>Isim Girin')
+name =input('> Isim: ')
 from pathlib import Path
-Path("dataset/"+name).mkdir(parents=True, exist_ok=True)
+Path("camera/dataset/"+name).mkdir(parents=True, exist_ok=True)
 cam = cv2.VideoCapture(0)
 
 cv2.namedWindow("press space to take a photo", cv2.WINDOW_NORMAL)
@@ -25,7 +25,7 @@ while True:
         break
     elif k%256 == 32:
         # SPACE pressed
-        img_name = "dataset/"+ name +"/image_{}.jpg".format(img_counter)
+        img_name = "camera/dataset/"+ name +"/image_{}.jpg".format(img_counter)
         cv2.imwrite(img_name, frame)
         print("{} written!".format(img_name))
         img_counter += 1

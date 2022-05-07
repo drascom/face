@@ -1,0 +1,2 @@
+#to see qt plugins errors
+export QT_DEBUG_PLUGINS=1

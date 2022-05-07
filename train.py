@@ -11,7 +11,7 @@ import os
 def train_data():
 	# our images are located in the dataset folder
 	print("[INFO] start processing faces...")
-	imagePaths = list(paths.list_images("dataset"))
+	imagePaths = list(paths.list_images("camera/dataset"))
 
 	# initialize the list of known encodings and known names
 	knownEncodings = []
@@ -47,6 +47,9 @@ def train_data():
 	# dump the facial encodings + names to disk
 	print("[INFO] serializing encodings...")
 	data = {"encodings": knownEncodings, "names": knownNames}
-	f = open("encodings.pickle", "wb")
+	f = open("camera/encodings.pickle", "wb")
 	f.write(pickle.dumps(data))
 	f.close()
+
+if __name__ == "__main__":
+	train_data()
