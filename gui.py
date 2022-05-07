@@ -5,8 +5,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import cv2
 
-from run import Scanning
-
+from scan import Scanning
+from train import train_data
 
 class CameraThread(QThread):
     ImageUpdate = pyqtSignal(QImage)
@@ -26,19 +26,23 @@ class CameraThread(QThread):
         while self.ThreadActive:
             ret, frame = self.capture.read()
             if ret:
+                #scanning face
+                name = scan.scan_face(frame)
+                if name is not None:
+                    self.FaceFound.emit(
+                        {"name": name, "image": 'faceid_confirm'})
+                    self.stop()
+                #update video
                 Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 FlippedImage = cv2.flip(Image, 1)
                 ConvertToQtFormat = QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0],
                                            QImage.Format_RGB888)
                 Pic = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
                 self.ImageUpdate.emit(Pic)
-                name = scan.scan_face(frame)
-                if name is not None:
-                    self.FaceFound.emit(
-                        {"name": name, "image": 'faceid_confirm'})
-                    self.stop()
             else:
                 print("capture read olmadı")
+                break
+            
         self.ButtonUpdate.emit(self.capture.isOpened())
 
     def stop(self):
