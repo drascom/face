@@ -11,19 +11,24 @@ from train import train_data
 
 class CameraThread(QThread):
     ImageUpdate = pyqtSignal(QImage)
+    ButtonUpdate = pyqtSignal(boolean)
     FaceFound = pyqtSignal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ThreadActive = False
+        self.capture = None
+        self.tmp = None
 
     def run(self):
         print("camera Thread Start.")
         self.ThreadActive = True
+        self.ButtonUpdate.emit(True)
         self.scan = Scanning()
         while self.ThreadActive:
             self.scan.run()
             self.ImageUpdate.emit(self.scan.picture)
+        self.ButtonUpdate.emit(False)
 
     def stop(self):
         self.ThreadActive = False

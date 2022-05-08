@@ -8,26 +8,47 @@ import cv2
 from scan import Scanning
 from train import train_data
 
-
 class CameraThread(QThread):
     ImageUpdate = pyqtSignal(QImage)
+    ButtonUpdate = pyqtSignal(object)
     FaceFound = pyqtSignal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ThreadActive = False
+        self.capture = None
 
     def run(self):
-        print("camera Thread Start.")
         self.ThreadActive = True
-        self.scan = Scanning()
+        scan = Scanning()
+        self.capture = cv2.VideoCapture(0)
+        self.ButtonUpdate.emit(self.capture.isOpened())
         while self.ThreadActive:
-            self.scan.run()
-            self.ImageUpdate.emit(self.scan.picture)
+            ret, frame = self.capture.read()
+            if ret:
+                #scanning face
+                name = scan.scan_face(frame)
+                if name is not None:
+                    self.FaceFound.emit(
+                        {"name": name, "image": 'faceid_confirm'})
+                    self.stop()
+                #update video
+                Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                FlippedImage = cv2.flip(Image, 1)
+                ConvertToQtFormat = QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0],
+                                           QImage.Format_RGB888)
+                Pic = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+                self.ImageUpdate.emit(Pic)
+            else:
+                print("capture read olmadı")
+                break
+            
+        self.ButtonUpdate.emit(self.capture.isOpened())
 
     def stop(self):
         self.ThreadActive = False
-        self.scan.stop()
+        self.capture.release()
+        self.quit()
 
 
 class MainGif(QLabel):
@@ -35,7 +56,7 @@ class MainGif(QLabel):
         QLabel.__init__(self)
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.setScaledContents(True)
-        # self.change_image('main')
+        self.change_image('main')
 
     def change_image(self, img_name):
         print("gif change run", img_name)
@@ -82,10 +103,10 @@ class CameraScreen(QWidget):
         super(CameraScreen, self).__init__()
         self.CameraThread = CameraThread()
         self.VBL = QVBoxLayout()
-        self.camera_status = False
+
         self.GifArea = MainGif()
         self.VBL.addWidget(self.GifArea)
-        # self.GifArea.change_image('faceid')
+        self.GifArea.change_image('faceid')
 
         self.HBL = QHBoxLayout()
         self.VBL.addLayout(self.HBL)
@@ -95,38 +116,49 @@ class CameraScreen(QWidget):
             lambda screen=0: self.update_screen(screen=0))
         self.HBL.addWidget(self.HomeBTN)
 
-        self.CameraBTN = QPushButton("--")
-        self.HBL.addWidget(self.CameraBTN)
-        self.CameraBTN.clicked.connect(self.toggle_camera)
+        self.VideoOnBTN = QPushButton("Start")
+        self.HBL.addWidget(self.VideoOnBTN)
+        self.VideoOnBTN.clicked.connect(self.start_camera)
 
+        self.VideoOffBTN = QPushButton("Stop")
+        self.HBL.addWidget(self.VideoOffBTN)
+        self.VideoOffBTN.clicked.connect(self.stop_camera)
+        self.VideoOffBTN.hide()
 
         self.setLayout(self.VBL)
 
     def update_screen(self, screen):
         self.change_screen.emit(screen)
 
-    def toggle_camera(self):
-        if self.camera_status:
-            self.CameraBTN.setText("Start")
-            self.CameraThread.stop()
-            self.GifArea.change_image('wakeup')
-        else:
-            self.CameraBTN.setText("Stop")
-            self.CameraThread.start()
-            self.CameraThread.ImageUpdate.connect(self.ImageUpdateSlot)
-            self.CameraThread.FaceFound.connect(self.FaceFoundSlot)
-        self.camera_status = not self.camera_status
+    def start_camera(self):
+        self.CameraThread.start()
+        self.CameraThread.ImageUpdate.connect(self.ImageUpdateSlot)
+        self.CameraThread.ButtonUpdate.connect(self.ButtonUpdateSlot)
+        self.CameraThread.FaceFound.connect(self.FaceFoundSlot)
+
+    def stop_camera(self):
+        self.CameraThread.stop()
+        self.GifArea.change_image('wakeup')
+        self.CameraThread.ButtonUpdate.connect(self.ButtonUpdateSlot)
 
     def ImageUpdateSlot(self, Image):
-        self.GifArea.clear()
         self.GifArea.setPixmap(QPixmap.fromImage(Image))
 
-    def FaceFoundSlot(self, Data):
+    def FaceFoundSlot(self,Data):
         self.GifArea.change_image(Data['image'])
-        print('[INFO] User Found: ', Data['name'])
+        print('[INFO] User Found: ',Data['name'])
         self.timer = QTimer()
-        self.timer.timeout.connect(lambda screen=0: self.update_screen(screen))
+        self.timer.timeout.connect(lambda screen =0:self.update_screen(screen))
         self.timer.start(1500)
+
+    def ButtonUpdateSlot(self, status):
+        print("button status", status)
+        if status:
+            self.VideoOffBTN.show()
+            self.VideoOnBTN.hide()
+        else:
+            self.VideoOnBTN.show()
+            self.VideoOffBTN.hide()
 
 
 class MainWindow(QWidget):
@@ -153,7 +185,7 @@ class MainWindow(QWidget):
         self.screens.addWidget(self.camera_screen)
         self.camera_screen.change_screen.connect(self.update_screen)
 
-        self.screens.setCurrentIndex(1)
+        self.screens.setCurrentIndex(0)
 
         self.setLayout(self.VBL)
         self.setFixedWidth(400)

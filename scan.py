@@ -6,8 +6,9 @@ from imutils.video import FPS
 import face_recognition
 import pickle
 import cv2
-from PyQt5.QtGui import QImage
-from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QMovie, QPixmap, QImage
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
 from datetime import datetime
 from pathlib import Path
 
@@ -16,7 +17,9 @@ class Scanning():
     def __init__(self):
         self.currentname = "Bilmiyorum"
         self.result = None
-        self.picture= None
+        self.picture = None
+        self.exit = None
+        self.capture = cv2.VideoCapture(0)
         encodingsP = "camera/encodings.pickle"
         print("[INFO] loading encodings + face detector...")
         self.data = pickle.loads(open(encodingsP, "rb").read())
@@ -76,16 +79,25 @@ class Scanning():
             print("{} written!".format(img_name))
             img_counter += 1
 
-    def run(self,capture):
-        while True:
-            ret, frame = capture.read()
-            if ret:
-                # update video
-                Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                FlippedImage = cv2.flip(Image, 1)
-                ConvertToQtFormat = QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0],
-                                           QImage.Format_RGB888)
-                self.picture = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+    def convert_image(self, frame):
+        # update video
+        Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        FlippedImage = cv2.flip(Image, 1)
+        ConvertToQtFormat = QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0],
+                                   QImage.Format_RGB888)
+        self.picture = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+
+    def stop(self):
+        self.exit = True
+        self.capture.release()
+
+    def run(self):
+        ret, frame = self.capture.read()
+        if ret:
+            self.convert_image(frame)
+        else:
+            print("frame alınamadı")
+
 
 if __name__ == "__main__":
     x = Scanning()
