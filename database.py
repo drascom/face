@@ -2,15 +2,15 @@ import sqlite3
 from unittest import result
 
 
-class RecordAlarm:
+class DataRecords:
     def __init__(self):
         self.respond = {}
-        self.conn = sqlite3.connect('main.db')
-        self.cursor = self.conn.cursor()
-        check = self.cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='db';")
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
+        check = cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='db';")
     
         if check.fetchone()[0] == 0:
-            self.cursor.execute("CREATE TABLE IF NOT EXISTS db("
+            cursor.execute("CREATE TABLE IF NOT EXISTS db("
                                     "id TEXT,"
                                     "request_scan BOOLEAN DEFAULT(FALSE),"
                                     "request_capture BOOLEAN DEFAULT(FALSE),"
@@ -20,25 +20,28 @@ class RecordAlarm:
                                     "alarm_status TEXT DEFAULT(00)"
                                     ")")
             print('Main Table created')
-            self.initAlarm()
-        print("Init Completed")
+            self.initDefaults()
         
 
-    def initAlarm(self):
+    def initDefaults(self):
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()        
         sql_insert_query = "INSERT INTO  db ('id') VALUES (?)"
-        data = ('1')
-        self.cursor.execute(sql_insert_query, data)
-        self.conn.commit()
-        print("Alarm set to defaults")
-        self.getAlarm()
+        data = ('0')
+        cursor.execute(sql_insert_query, data)
+        print("Init Completed")
+        self.getData()
+        conn.commit()
 
     def setHour(self, hour):
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
         # hour = text2int(command)
         if hour is False:
             print("yanlış gelen saat: ", hour)
             self.respond = {'err': 'söylediğin bir saat değil.tekrar dene'}
             return
-        exist = self.conn.execute(
+        exist = conn.execute(
             "select alarm_hour from db where id = ?", (1,)).fetchone()
         try:
             if exist is None:
@@ -47,17 +50,19 @@ class RecordAlarm:
             else:
                 sql_update_query = """Update db set hour = ?  WHERE id = ?"""
                 data = (hour, '1')
-                self.cursor.execute(sql_update_query, data)
-                self.conn.commit()
+                cursor.execute(sql_update_query, data)
+                conn.commit()
                 print("Hour Updated successfully", hour)
-            self.respond = self.getAlarm()
+            self.respond = self.getData()
         except:
             self.respond = {'err': 'Hour cannot be updated'}
         return self.respond
 
     def setMinute(self, min):
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
         # min = text2int(min)
-        exist = self.conn.execute(
+        exist = conn.execute(
             "select alarm_minute from db where id = ?", (1,)).fetchone()
         try:
             if exist is None:
@@ -66,74 +71,87 @@ class RecordAlarm:
             else:
                 sql_update_query = "Update db set alarm_minute = ?, status = ? WHERE id = ?"
                 data = (min, 'on', '1')
-                self.cursor.execute(sql_update_query, data)
-                self.conn.commit()
+                cursor.execute(sql_update_query, data)
+                conn.commit()
                 print("Minute Updated successfully", min)
-            self.respond = self.getAlarm()
+            self.respond = self.getData()
         except:
             self.respond = {'err': 'Minute cannot be updated'}
         return self.respond
 
     def disableAlarm(self):
-        exist = self.conn.execute(
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
+        
+        exist = conn.execute(
             "select alarm_status from db where id = ?", (1,)).fetchone()
         if exist:
             sql_update_query = """Update db set alarm_status = ? WHERE id = ?"""
             data = ('off', '1')
-            self.cursor.execute(sql_update_query, data)
-            self.conn.commit()
+            cursor.execute(sql_update_query, data)
+            conn.commit()
             print("Alarm disabled successfully")
-            self.respond = self.getAlarm()
+            self.respond = self.getData()
         else:
             self.respond = {'err': 'Minute cannot be updated'}
         return self.respond
 
     def enableAlarm(self):
-        exist = self.conn.execute(
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
+        
+        exist = conn.execute(
             "select alarm_status from db where id = ?", (1,)).fetchone()
         if exist:
             sql_update_query = """Update db set alarm_status = ? WHERE id = ?"""
             data = ('on', '1')
-            self.cursor.execute(sql_update_query, data)
-            self.conn.commit()
+            cursor.execute(sql_update_query, data)
+            conn.commit()
             print("Alarm activated successfully")
-            self.respond = self.getAlarm()
+            self.respond = self.getData()
         else:
             self.respond = {'err': 'Minute cannot be updated'}
         return self.respond
 
-    def getAlarm(self):
-        output_obj = self.cursor.execute(
-            "SELECT * FROM db WHERE id= ? ", '1')
+    def getData(self):
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
+        row_as_dict = None
+        output_obj = cursor.execute(
+            "SELECT * FROM db WHERE id= ? ", '0')
         results = output_obj.fetchall()
-        # for row in results:
-        #     row_as_dict = {output_obj.description[i][0]:row[i] for i in range(len(row))}
-        row_as_dict = {
-            output_obj.description[i][0]: results[0][i] for i in range(len(results[0]))
-        }
+        
+        for row in results:
+            row_as_dict = {output_obj.description[i][0]:row[i] for i in range(len(row))}
         if row_as_dict:
             self.respond = row_as_dict
             return row_as_dict
         else:
-            return {'err': 'Alarm record not found'}
+            return {'err': 'Data record not found'}
+        conn.commit()
+
+        
     def enableScan(self):
-        exist = self.conn.execute(
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
+        
+        exist = cursor.execute(
             "select request_scan from db where id = ?", (1,)).fetchone()
         if exist:
             sql_update_query = """Update db set request_scan = ? WHERE id = ?"""
             data = ('1', '1')
-            self.cursor.execute(sql_update_query, data)
-            self.conn.commit()
+            cursor.execute(sql_update_query, data)
+            conn.commit()
             print("Scan activated ")
-            self.respond = self.getAlarm()
+            self.respond = self.getData()
         else:
             self.respond = {'err': 'Scan cannot be activated'}
         return self.respond
 
 if __name__ == "__main__":
     import time
-    x = RecordAlarm()
-    print("respond: ", x.respond)
+    x = DataRecords()
+    print("respond: ", x.getData())
     # x.setHour("dokuz")
     # print(x.respond)
     # x.setMinute("yirmi")

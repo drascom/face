@@ -1,5 +1,4 @@
 import sys
-import time
 from xmlrpc.client import boolean
 from PyQt5.QtGui import QMovie, QPixmap, QImage
 from PyQt5.QtWidgets import *
@@ -9,37 +8,22 @@ from database import DataRecords
 from scan import Scanning
 from train import train_data
 
-
 class MainThread(QThread):
-    Trigger = pyqtSignal(object)
+    ResponseUpdate = pyqtSignal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.DataRecords = DataRecords()
         self.ThreadActive = False
-        self.trigers = None
 
     def run(self):
         print("Main Thread Start.")
         self.ThreadActive = True
-        activeJobs = []
         while self.ThreadActive:
-            print("active: ", activeJobs)
-            time.sleep(0.5)
-            self.trigers = self.DataRecords.getData()
-            for key, value in self.trigers.items():
-                if value == 1:
-                    if key not in activeJobs:
-                        activeJobs.append(key)
-                        self.Trigger.emit(key)
-                else:
-                    if key in activeJobs:
-                        activeJobs.remove(key)
+            pass
 
     def stop(self):
         self.ThreadActive = False
-
-
+       
 class CameraThread(QThread):
     ImageUpdate = pyqtSignal(QImage)
     FaceFound = pyqtSignal(object)
@@ -66,11 +50,10 @@ class CameraThread(QThread):
 
     def stop(self):
         self.ThreadActive = False
-        self.scan.capture.stop()  # imutils VideoStream
+        self.scan.capture.stop()#imutils VideoStream
         # self.scan.capture.release()#opencv VideoCapture
 
-# reusable widget definitions
-
+#################### reusable widget definitions
 
 class Window(QWidget):
     changeWindow = pyqtSignal(int)
@@ -80,8 +63,6 @@ class Window(QWidget):
             self.changeWindow.emit(index)
 
         return callback
-
-
 class MainGif(QLabel):
     def __init__(self):
         QLabel.__init__(self)
@@ -94,8 +75,7 @@ class MainGif(QLabel):
         movie = QMovie('images/faces/'+str(img_name)+'.gif')
         self.setMovie(movie)
         movie.start()
-# reusable widget definitions
-
+####################### reusable widget definitions
 
 class HomeScreen(Window):
     def __init__(self):
@@ -121,8 +101,13 @@ class HomeScreen(Window):
         self.HBL.addWidget(self.BTN_4)
         self.setLayout(self.VBL)
 
+    def update_screen(self, screen):
+        self.change_screen.emit(screen)
+
 
 class CameraScreen(Window):
+    change_screen = pyqtSignal(int)
+
     def __init__(self):
         super(CameraScreen, self).__init__()
         self.CameraThread = CameraThread()
@@ -145,7 +130,11 @@ class CameraScreen(Window):
         self.HBL.addWidget(self.CameraBTN)
         self.CameraBTN.clicked.connect(self.toggle_camera)
 
+
         self.setLayout(self.VBL)
+
+    def update_screen(self, screen):
+        self.change_screen.emit(screen)
 
     def toggle_camera(self):
         if self.camera_status:
@@ -153,8 +142,9 @@ class CameraScreen(Window):
             self.CameraThread.stop()
             self.GifArea.setPixmap(QPixmap())
             # self.timer.timeout.connect(lambda image='wakeup': self.GifArea.change_image(image))
-            self.timer.singleShot(
-                500, lambda image='wakeup': self.GifArea.change_image(image))
+            self.timer.singleShot(500, lambda image='wakeup': self.GifArea.change_image(image))
+
+            
         else:
             self.CameraBTN.setText("Stop")
             self.CameraThread.start()
@@ -175,7 +165,6 @@ class CameraScreen(Window):
 class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.MainThread = MainThread()
         self.camera_status = False
         self.VBL = QVBoxLayout()
         self.screenList = {
@@ -199,14 +188,9 @@ class MainWindow(QWidget):
         self.setFixedWidth(400)
         self.setFixedHeight(300)
         # self.showMaximized()
-        self.MainThread.Trigger.connect(self.run_function)
-        self.MainThread.start()
 
     def update_screen(self, screen):
         self.screens.setCurrentIndex(screen)
-
-    def run_function(self):
-        print("trigger arrived")
 
 
 if __name__ == "__main__":
