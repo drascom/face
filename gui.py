@@ -21,15 +21,33 @@ class CameraThread(QThread):
         print("camera Thread Start.")
         self.ThreadActive = True
         self.scan = Scanning()
+        self.scan.run()
         while self.ThreadActive:
-            self.scan.run()
-            self.ImageUpdate.emit(self.scan.picture)
+            print("robot loop")
+            if self.scan.picture is not None:
+                print("pic update")
+                self.ImageUpdate.emit(self.scan.picture)
+            # if self.scan.currentname != "?":
+            #     print("bulundu",self.scan.currentname)
+            #     self.FaceFound.emit(
+            #         {"name": self.scan.currentname, "image": 'faceid_confirm'})
+            #     break
 
     def stop(self):
         self.ThreadActive = False
-        self.scan.stop()
+        self.scan.capture.stop()#imutils VideoStream
+        # self.scan.capture.release()#opencv VideoCapture
 
+#################### reusable widget definitions
 
+class Window(QWidget):
+    changeWindow = pyqtSignal(int)
+
+    def changeTo(self, index):
+        def callback():
+            self.changeWindow.emit(index)
+
+        return callback
 class MainGif(QLabel):
     def __init__(self):
         QLabel.__init__(self)
@@ -42,11 +60,9 @@ class MainGif(QLabel):
         movie = QMovie('images/faces/'+str(img_name)+'.gif')
         self.setMovie(movie)
         movie.start()
+####################### reusable widget definitions
 
-
-class HomeScreen(QWidget):
-    change_screen = pyqtSignal(int)
-
+class HomeScreen(Window):
     def __init__(self):
         super(HomeScreen, self).__init__()
         self.VBL = QVBoxLayout()
@@ -57,17 +73,16 @@ class HomeScreen(QWidget):
         self.VBL.addLayout(self.HBL)
 
         self.BTN_1 = QPushButton("Camera")
-        self.BTN_1.clicked.connect(
-            lambda screen=1: self.update_screen(screen=1))
+        self.BTN_1.clicked.connect(self.changeTo(1))
         self.HBL.addWidget(self.BTN_1)
         self.BTN_2 = QPushButton("Saat")
-        self.BTN_2.clicked.connect(lambda screen=2: self.update_screen(screen))
+        self.BTN_2.clicked.connect(self.changeTo(2))
         self.HBL.addWidget(self.BTN_2)
         self.BTN_3 = QPushButton("Hava")
-        self.BTN_3.clicked.connect(lambda screen=3: self.update_screen(screen))
+        self.BTN_3.clicked.connect(self.changeTo(3))
         self.HBL.addWidget(self.BTN_3)
         self.BTN_4 = QPushButton("Bilgi")
-        self.BTN_4.clicked.connect(lambda screen=4: self.update_screen(screen))
+        self.BTN_4.clicked.connect(self.changeTo(4))
         self.HBL.addWidget(self.BTN_4)
         self.setLayout(self.VBL)
 
@@ -75,24 +90,25 @@ class HomeScreen(QWidget):
         self.change_screen.emit(screen)
 
 
-class CameraScreen(QWidget):
+class CameraScreen(Window):
     change_screen = pyqtSignal(int)
 
     def __init__(self):
         super(CameraScreen, self).__init__()
         self.CameraThread = CameraThread()
-        self.VBL = QVBoxLayout()
         self.camera_status = False
+        self.timer = QTimer()
+
+        self.VBL = QVBoxLayout()
         self.GifArea = MainGif()
         self.VBL.addWidget(self.GifArea)
-        # self.GifArea.change_image('faceid')
+        self.GifArea.change_image('faceid')
 
         self.HBL = QHBoxLayout()
         self.VBL.addLayout(self.HBL)
 
         self.HomeBTN = QPushButton("Home")
-        self.HomeBTN.clicked.connect(
-            lambda screen=0: self.update_screen(screen=0))
+        self.HomeBTN.clicked.connect(self.changeTo(0))
         self.HBL.addWidget(self.HomeBTN)
 
         self.CameraBTN = QPushButton("--")
@@ -109,7 +125,11 @@ class CameraScreen(QWidget):
         if self.camera_status:
             self.CameraBTN.setText("Start")
             self.CameraThread.stop()
-            self.GifArea.change_image('wakeup')
+            self.GifArea.setPixmap(QPixmap())
+            # self.timer.timeout.connect(lambda image='wakeup': self.GifArea.change_image(image))
+            self.timer.singleShot(500, lambda image='wakeup': self.GifArea.change_image(image))
+
+            
         else:
             self.CameraBTN.setText("Stop")
             self.CameraThread.start()
@@ -118,13 +138,11 @@ class CameraScreen(QWidget):
         self.camera_status = not self.camera_status
 
     def ImageUpdateSlot(self, Image):
-        self.GifArea.clear()
         self.GifArea.setPixmap(QPixmap.fromImage(Image))
 
     def FaceFoundSlot(self, Data):
         self.GifArea.change_image(Data['image'])
         print('[INFO] User Found: ', Data['name'])
-        self.timer = QTimer()
         self.timer.timeout.connect(lambda screen=0: self.update_screen(screen))
         self.timer.start(1500)
 
@@ -133,10 +151,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.camera_status = False
-
         self.VBL = QVBoxLayout()
-        self.screens = QStackedLayout()
-        self.VBL.addLayout(self.screens)
         self.screenList = {
             'home_screen': 0,
             'time_screen': 1,
@@ -144,16 +159,15 @@ class MainWindow(QWidget):
             'weather_screen': 3,
             'camera_screen': 4
         }
-        # define&add screens and connect with change screen signal
-        self.home_screen = HomeScreen()
-        self.screens.addWidget(self.home_screen)
-        self.home_screen.change_screen.connect(self.update_screen)
 
-        self.camera_screen = CameraScreen()
-        self.screens.addWidget(self.camera_screen)
-        self.camera_screen.change_screen.connect(self.update_screen)
-
-        self.screens.setCurrentIndex(1)
+        screens = QStackedLayout()
+        self.VBL.addLayout(screens)
+        # self.screens.setCurrentIndex(0)
+        for w in (HomeScreen(), CameraScreen()):
+            screens.addWidget(w)
+            if isinstance(w, Window):
+                w.changeWindow.connect(screens.setCurrentIndex)
+        screens.setCurrentIndex(1)
 
         self.setLayout(self.VBL)
         self.setFixedWidth(400)
