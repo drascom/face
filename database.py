@@ -15,7 +15,7 @@ class DataRecords:
                                     "view_camera NUMERIC DEFAULT(0)"
                                     "request_scan BOOLEAN DEFAULT(FALSE),"
                                     "request_capture BOOLEAN DEFAULT(FALSE),"
-                                    "request_train_face BOOLEAN DEFAULT(FALSE),"
+                                    "request_view BOOLEAN DEFAULT(FALSE),"
                                     "alarm_hour TEXT DEFAULT(00),"
                                     "alarm_minute TEXT DEFAULT(00),"
                                     "alarm_status TEXT DEFAULT(00)"

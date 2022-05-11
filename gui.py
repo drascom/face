@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import cv2
 from database import DataRecords
-from Camera import scan_face,capture_face,view_face,convert_image
+from Camera import scan_face, capture_face, view_face, convert_image
 from train import train_data
 
 
@@ -70,9 +70,9 @@ class CameraThread(QThread):
         self.mode = None
 
     def run(self):
-        print("Camera Mode: ",self.mode)
+        print("Camera Mode: ", self.mode)
         self.ThreadActive = True
-        #start camera
+        # start camera
         self.capture = cv2.VideoCapture(0)
         if self.mode == "view":
             while self.ThreadActive:
@@ -82,28 +82,30 @@ class CameraThread(QThread):
                     # Pic = view_face(frame)
                     self.ImageUpdate.emit(Pic)
                 else:
-                    #if camera is not pluggedin try again
+                    # if camera is not pluggedin try again
                     self.capture.release()
                     self.capture = cv2.VideoCapture(0)
             self.capture.release()
         elif self.mode == "scan":
-            #stop openvc camera imutils will open camera again
+            # stop openvc camera imutils will open camera again
             self.capture.release()
             person = scan_face()
             self.PersonUpdate.emit(person)
             return
         elif self.mode == "capture":
-             #stop openvc camera imutils will open camera again
+            # stop openvc camera imutils will open camera again
             self.capture.release()
             name = input('isim > ')
             capture_face(name)
             return
-             
+
     def stop(self):
         self.ThreadActive = False
         self.quit()
 
 # reusable widget definitions
+
+
 class Window(QWidget):
     changeWindow = pyqtSignal(int)
 
@@ -150,6 +152,11 @@ class HomeScreen(Window):
         super(HomeScreen, self).__init__()
         self.sql_connection = UpdateSql()
         self.CameraThread = CameraThread()
+        self.request_view = 0
+        self.request_scan = 0
+        self.request_capture = 0
+        self.timer = QTimer()
+
         self.VBL = QVBoxLayout()
         self.GifArea = MainGif()
         self.GifArea.setText("home")
@@ -160,68 +167,54 @@ class HomeScreen(Window):
         self.BTN_1 = QPushButton("Camera")
         self.BTN_1.clicked.connect(self.changeTo(1))
         self.HBL.addWidget(self.BTN_1)
-        self.BTN_2 = QPushButton("SCAN")
-        self.BTN_2.clicked.connect(self.set_scanning)
+        self.BTN_2 = QPushButton("view")
+        self.BTN_2.clicked.connect(self.set_view_camera)
         self.HBL.addWidget(self.BTN_2)
+        self.BTN_3 = QPushButton("scan")
+        self.BTN_3.clicked.connect(self.set_scan_person)
+        self.HBL.addWidget(self.BTN_3)
+        self.BTN_4 = QPushButton("record")
+        self.BTN_4.clicked.connect(self.set_record_person)
+        self.HBL.addWidget(self.BTN_4)
         self.setLayout(self.VBL)
-
-    def ImageUpdateSlot(self, Image):
-        self.GifArea.setPixmap(QPixmap.fromImage(Image))
-
-    def set_scanning(self):
-        self.sql_connection.run("request_scan", "1")
-
-
-class CameraScreen(Window):
-    def __init__(self):
-        super(CameraScreen, self).__init__()
-        self.CheckTriggersThread = CheckTriggersThread()
-
-        self.CameraThread = CameraThread()
-        self.CameraThread.ImageUpdate.connect(self.ImageUpdateSlot)
-
-        self.timer = QTimer()
-
-        self.VBL = QVBoxLayout()
-        self.GifArea = MainGif()
-        self.GifArea.setText("camera")
-        self.label = QLabel()
-        self.label.setScaledContents(True)
-        self.VBL.addWidget(self.GifArea)
-        # self.GifArea.change_image('faceid')
-
-        self.HBL = QHBoxLayout()
-        self.VBL.addLayout(self.HBL)
-
-        self.HomeBTN = QPushButton("Home")
-        self.HomeBTN.clicked.connect(self.changeTo(0))
-        self.HBL.addWidget(self.HomeBTN)
-
-        self.setLayout(self.VBL)
-
-        # self.camera_view()
-        self.camera_capture()
-        # self.camera_scan()
 
     def run_function(self, key):
         slot = getattr(self, key)
         print("1 function call", key)
         slot()
-    
+
+    def ImageUpdateSlot(self, Image):
+        self.GifArea.setPixmap(QPixmap.fromImage(Image))
+
+    def set_view_camera(self):
+        if self.request_view == 0:
+            self.sql_connection.run("request_view", "1")
+        else:
+            self.sql_connection.run("request_view", "1")
+
+    def set_scan_person(self):
+        self.sql_connection.run("request_scan", "1")
+
+    def set_record_person(self):
+        self.sql_connection.run("request_capture", "1")
+
     def camera_start(self):
         self.CameraThread.start()
         self.CameraThread.ImageUpdate.connect(self.ImageUpdateSlot)
         self.CameraThread.PersonUpdate.connect(self.PersonFoundSlot)
+
     def camera_scan(self):
         self.CameraThread.mode = "scan"
         self.camera_start()
+
     def camera_capture(self):
         self.CameraThread.mode = "capture"
         self.camera_start()
+
     def camera_view(self):
         self.CameraThread.mode = "view"
         self.camera_start()
-       
+
     def ImageUpdateSlot(self, Image):
         self.GifArea.setPixmap(QPixmap.fromImage(Image))
 
@@ -230,6 +223,7 @@ class CameraScreen(Window):
         print('[INFO] User Found: ', Data['name'])
         self.timer.timeout.connect(lambda screen=0: self.update_screen(screen))
         self.timer.start(1500)
+
 
 
 class MainWindow(QWidget):
@@ -242,14 +236,13 @@ class MainWindow(QWidget):
             'home_screen': 0,
             'time_screen': 1,
             'alarm_screen': 2,
-            'weather_screen': 3,
-            'camera_screen': 4
+            'weather_screen': 3
         }
 
         self.screens = QStackedLayout()
         self.VBL.addLayout(self.screens)
         # self.screens.setCurrentIndex(0)
-        for w in (HomeScreen(), CameraScreen()):
+        for w in (HomeScreen(),):
             self.screens.addWidget(w)
             if isinstance(w, Window):
                 w.changeWindow.connect(self.screens.setCurrentIndex)
@@ -269,7 +262,7 @@ class MainWindow(QWidget):
         screen_1_items = ["view_camera", "request_scan",
                           "request_capture", "request_train_face"]
         if key in screen_1_items:
-            self.screens.setCurrentIndex(1)
+            self.screens.setCurrentIndex(0)
 
 
 if __name__ == "__main__":
