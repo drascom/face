@@ -5,7 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-
+# Personal folders
+camera/dataset/
 # Distribution / packaging
 .Python
 venv/

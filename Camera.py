@@ -128,21 +128,10 @@ def scan_face():
                 # If someone in your dataset is identified, print their name on the screen
                 if currentname != name:
                     currentname = name
+                    capture.stop()
                     return currentname
-                    break
-
-            # update the list of names
-            names.append(name)
-
-        # loop over the recognized faces
-        for ((top, right, bottom, left), name) in zip(boxes, names):
-            # draw the predicted face name on the image - color is in BGR
-            cv2.rectangle(frame, (left, top), (right, bottom),
-                          (0, 255, 225), 2)
-            y = top - 15 if top - 15 > 15 else top + 15
-            cv2.putText(frame, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
-                        .8, (0, 255, 255), 2)
-    capture.stop()
+                    break      
+    
 
 
 def capture_face(name):
@@ -211,5 +200,4 @@ def train_data():
 
 
 if __name__ == "__main__":
-    x = Scanning()
-    x.scan_face()
+   print(scan_face())

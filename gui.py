@@ -67,7 +67,6 @@ class CameraThread(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ThreadActive = False
-        self.capture = None
         self.mode = None
 
     def run(self):
@@ -86,25 +85,22 @@ class CameraThread(QThread):
                     #if camera is not pluggedin try again
                     self.capture.release()
                     self.capture = cv2.VideoCapture(0)
+            self.capture.release()
         elif self.mode == "scan":
             #stop openvc camera imutils will open camera again
             self.capture.release()
             person = scan_face()
-            print("person: ",person)
             self.PersonUpdate.emit(person)
             return
         elif self.mode == "capture":
              #stop openvc camera imutils will open camera again
             self.capture.release()
-            name = "test"
+            name = input('isim > ')
             capture_face(name)
             return
              
-
     def stop(self):
         self.ThreadActive = False
-        self.capture.release()
-        print("kamera durum: ", self.capture.isOpened())   # self.wait()
         self.quit()
 
 # reusable widget definitions
@@ -203,8 +199,8 @@ class CameraScreen(Window):
 
         self.setLayout(self.VBL)
 
-        self.camera_view()
-        # self.camera_capture()
+        # self.camera_view()
+        self.camera_capture()
         # self.camera_scan()
 
     def run_function(self, key):
