@@ -6,7 +6,9 @@ __pycache__/
 # C extensions
 *.so
 # Personal folders
+
 **/dataset/**/*.jpg
+dataset/*/
 # Distribution / packaging
 .Python
 venv/
