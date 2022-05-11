@@ -7,26 +7,26 @@ class DataRecords:
         self.respond = {}
         conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
-        check = cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='db';")
-    
+        check = cursor.execute(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='db';")
+
         if check.fetchone()[0] == 0:
             cursor.execute("CREATE TABLE IF NOT EXISTS db("
-                                    "id TEXT,"
-                                    "view_camera NUMERIC DEFAULT(0)"
-                                    "request_scan BOOLEAN DEFAULT(FALSE),"
-                                    "request_capture BOOLEAN DEFAULT(FALSE),"
-                                    "request_view BOOLEAN DEFAULT(FALSE),"
-                                    "alarm_hour TEXT DEFAULT(00),"
-                                    "alarm_minute TEXT DEFAULT(00),"
-                                    "alarm_status TEXT DEFAULT(00)"
-                                    ")")
+                           "id TEXT,"
+                           "view_camera NUMERIC DEFAULT(0)"
+                           "request_scan BOOLEAN DEFAULT(FALSE),"
+                           "request_capture BOOLEAN DEFAULT(FALSE),"
+                           "request_view BOOLEAN DEFAULT(FALSE),"
+                           "alarm_hour TEXT DEFAULT(00),"
+                           "alarm_minute TEXT DEFAULT(00),"
+                           "alarm_status TEXT DEFAULT(00)"
+                           ")")
             print('Main Table created')
             self.initDefaults()
-        
 
     def initDefaults(self):
         conn = sqlite3.connect('main.db')
-        cursor = conn.cursor()        
+        cursor = conn.cursor()
         sql_insert_query = "INSERT INTO  db ('id') VALUES (?)"
         data = ('0')
         cursor.execute(sql_insert_query, data)
@@ -83,7 +83,7 @@ class DataRecords:
     def disableAlarm(self):
         conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
-        
+
         exist = conn.execute(
             "select alarm_status from db where id = ?", (1,)).fetchone()
         if exist:
@@ -100,7 +100,7 @@ class DataRecords:
     def enableAlarm(self):
         conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
-        
+
         exist = conn.execute(
             "select alarm_status from db where id = ?", (1,)).fetchone()
         if exist:
@@ -121,9 +121,10 @@ class DataRecords:
         output_obj = cursor.execute(
             "SELECT * FROM db WHERE id= ? ", '0')
         results = output_obj.fetchall()
-        
+
         for row in results:
-            row_as_dict = {output_obj.description[i][0]:row[i] for i in range(len(row))}
+            row_as_dict = {
+                output_obj.description[i][0]: row[i] for i in range(len(row))}
         if row_as_dict:
             self.respond = row_as_dict
             return row_as_dict
@@ -131,11 +132,10 @@ class DataRecords:
             return {'err': 'Data record not found'}
         conn.commit()
 
-        
-    def request_scan(self,value):
+    def request_scan(self, value):
         conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
-        
+
         exist = cursor.execute(
             "select request_scan from db where id = ?", (0,)).fetchone()
         if exist:
@@ -148,6 +148,24 @@ class DataRecords:
         else:
             self.respond = {'err': 'Scan cannot be activated'}
         return self.respond
+
+    def request(self,column, value):
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
+
+        exist = cursor.execute(
+            "select request_scan from db where id = ?", (0,)).fetchone()
+        if exist:
+            sql_update_query = "Update db set "+column +" = ? WHERE id = ?"
+            data = (value, '0')
+            cursor.execute(sql_update_query, data)
+            conn.commit()
+            print(column +" activated ")
+            self.respond = self.getData()
+        else:
+            self.respond = {'err': column + 'cannot be activated'}
+        return self.respond
+
 
 if __name__ == "__main__":
     import time

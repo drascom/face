@@ -19,9 +19,9 @@ class UpdateSql(QThread):
     def run(self, function_name, value, ):
         print("SQL Update Start.")
         self.ThreadActive = True
-        slot = getattr(self.DataRecords, function_name)
+        # slot = getattr(self.DataRecords, function_name)
         while self.ThreadActive:
-            slot(value)
+            self.DataRecords.request(function_name,value)
             print(self.DataRecords.respond)
             self.stop()
 
@@ -44,6 +44,7 @@ class CheckTriggersThread(QThread):
         self.ThreadActive = True
         activeJobs = []
         while self.ThreadActive:
+            print(activeJobs)
             time.sleep(0.5)
             self.trigers = self.DataRecords.getData()
             for key, value in self.trigers.items():
@@ -189,8 +190,10 @@ class HomeScreen(Window):
     def set_view_camera(self):
         if self.request_view == 0:
             self.sql_connection.run("request_view", "1")
+            self.request_view = 1
         else:
-            self.sql_connection.run("request_view", "1")
+            self.sql_connection.run("request_view", "0")
+            self.request_view = 0
 
     def set_scan_person(self):
         self.sql_connection.run("request_scan", "1")
