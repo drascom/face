@@ -12,6 +12,7 @@ class DataRecords:
         if check.fetchone()[0] == 0:
             cursor.execute("CREATE TABLE IF NOT EXISTS db("
                                     "id TEXT,"
+                                    "view_camera NUMERIC DEFAULT(0)"
                                     "request_scan BOOLEAN DEFAULT(FALSE),"
                                     "request_capture BOOLEAN DEFAULT(FALSE),"
                                     "request_train_face BOOLEAN DEFAULT(FALSE),"
@@ -131,15 +132,15 @@ class DataRecords:
         conn.commit()
 
         
-    def enableScan(self):
+    def request_scan(self,value):
         conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
         
         exist = cursor.execute(
-            "select request_scan from db where id = ?", (1,)).fetchone()
+            "select request_scan from db where id = ?", (0,)).fetchone()
         if exist:
             sql_update_query = """Update db set request_scan = ? WHERE id = ?"""
-            data = ('1', '1')
+            data = ('1', '0')
             cursor.execute(sql_update_query, data)
             conn.commit()
             print("Scan activated ")
