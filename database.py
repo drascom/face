@@ -13,13 +13,14 @@ class DataRecords:
         if check.fetchone()[0] == 0:
             cursor.execute("CREATE TABLE IF NOT EXISTS db("
                            "id TEXT,"
-                           "view_camera NUMERIC DEFAULT(0)"
+                           "screen NUMERIC DEFAULT(0),"
+                           "view_camera BOOLEAN DEFAULT(FALSE),"
                            "request_scan BOOLEAN DEFAULT(FALSE),"
                            "request_capture BOOLEAN DEFAULT(FALSE),"
                            "request_view BOOLEAN DEFAULT(FALSE),"
-                           "alarm_hour TEXT DEFAULT(00),"
-                           "alarm_minute TEXT DEFAULT(00),"
-                           "alarm_status TEXT DEFAULT(00)"
+                           "alarm_hour NUMERIC DEFAULT(00),"
+                           "alarm_minute NUMERIC DEFAULT(00),"
+                           "alarm_status BOOLEAN DEFAULT(FALSE)"
                            ")")
             print('Main Table created')
             self.initDefaults()
@@ -132,6 +133,24 @@ class DataRecords:
             return {'err': 'Data record not found'}
         conn.commit()
 
+    def getColumn(self,column):
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
+        row_as_dict = None
+        output_obj = cursor.execute(
+            "SELECT "+ column +" FROM db WHERE id= ? ", '0')
+        results = output_obj.fetchall()
+
+        for row in results:
+            row_as_dict = {
+                output_obj.description[i][0]: row[i] for i in range(len(row))}
+        if row_as_dict:
+            self.respond = row_as_dict
+            return row_as_dict
+        else:
+            return {'err': 'Data record not found'}
+        conn.commit()
+
     def request_scan(self, value):
         conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
@@ -149,18 +168,18 @@ class DataRecords:
             self.respond = {'err': 'Scan cannot be activated'}
         return self.respond
 
-    def request(self,column, value):
+    def request(self, column, value):
         conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
 
         exist = cursor.execute(
             "select request_scan from db where id = ?", (0,)).fetchone()
         if exist:
-            sql_update_query = "Update db set "+column +" = ? WHERE id = ?"
+            sql_update_query = "Update db set "+column + " = ? WHERE id = ?"
             data = (value, '0')
             cursor.execute(sql_update_query, data)
             conn.commit()
-            print(column +" activated ")
+            print(column + " activated ")
             self.respond = self.getData()
         else:
             self.respond = {'err': column + 'cannot be activated'}

@@ -4,6 +4,8 @@ from xmlrpc.client import boolean
 from PyQt5.QtGui import QMovie, QPixmap, QImage, QFont
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5.uic import loadUi
+from PyQt5 import QtMultimedia
 import cv2
 from database import DataRecords
 from Camera import scan_face, capture_face, view_face, convert_image
@@ -19,9 +21,8 @@ class UpdateSql(QThread):
     def run(self, function_name, value, ):
         print("SQL Update Start.")
         self.ThreadActive = True
-        # slot = getattr(self.DataRecords, function_name)
         while self.ThreadActive:
-            self.DataRecords.request(function_name,value)
+            self.DataRecords.request(function_name, value)
             print(self.DataRecords.respond)
             self.stop()
 
@@ -32,6 +33,7 @@ class UpdateSql(QThread):
 
 class CheckTriggersThread(QThread):
     Trigger = pyqtSignal(object)
+    ScreenTrigger = pyqtSignal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -44,21 +46,25 @@ class CheckTriggersThread(QThread):
         self.ThreadActive = True
         activeJobs = []
         while self.ThreadActive:
-            print(activeJobs)
-            time.sleep(0.5)
+            if len(activeJobs) > 1:
+                print(activeJobs)
+            # self.msleep(100)
             self.trigers = self.DataRecords.getData()
             for key, value in self.trigers.items():
+                if key == "screen":
+                    self.ScreenTrigger.emit({key: value})
                 if value == 1:
                     if key not in activeJobs:
                         activeJobs.append(key)
-                        self.Trigger.emit(key)
+                        self.Trigger.emit({key: value})
                 else:
                     if key in activeJobs:
                         activeJobs.remove(key)
 
     def stop(self):
+        print("Thread Stop")
         self.ThreadActive = False
-        self.wait()
+        # self.stop()
 
 
 class CameraThread(QThread):
@@ -67,6 +73,7 @@ class CameraThread(QThread):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.CheckTriggersThread = CheckTriggersThread()
         self.ThreadActive = False
         self.mode = None
 
@@ -116,14 +123,6 @@ class Window(QWidget):
 
         return callback
 
-# herhangi bir widget yaratma ve tekrar kullanma ###################33
-# def createLabel(self, parent, objName, text):
-#     label = QLabel(parent)
-#     label.setGeometry(QRect(0, 0, 921, 91))
-#     label.setText(text)
-#     label.setObjectName(objName)
-#     return label
-
 
 class MainGif(QLabel):
     def __init__(self, parent=None):
@@ -153,6 +152,7 @@ class HomeScreen(Window):
         super(HomeScreen, self).__init__()
         self.sql_connection = UpdateSql()
         self.CameraThread = CameraThread()
+        self.CheckTriggersThread = CheckTriggersThread()
         self.request_view = 0
         self.request_scan = 0
         self.request_capture = 0
@@ -165,8 +165,9 @@ class HomeScreen(Window):
         self.HBL = QHBoxLayout()
         self.VBL.addLayout(self.HBL)
 
-        self.BTN_1 = QPushButton("Camera")
-        self.BTN_1.clicked.connect(self.changeTo(1))
+        self.BTN_1 = QPushButton("Weather")
+        # self.BTN_1.clicked.connect(self.changeTo(1))
+        self.BTN_1.clicked.connect(lambda: self.change_screen(1))
         self.HBL.addWidget(self.BTN_1)
         self.BTN_2 = QPushButton("view")
         self.BTN_2.clicked.connect(self.set_view_camera)
@@ -178,28 +179,32 @@ class HomeScreen(Window):
         self.BTN_4.clicked.connect(self.set_record_person)
         self.HBL.addWidget(self.BTN_4)
         self.setLayout(self.VBL)
+        self.CheckTriggersThread.Trigger.connect(self.run_function)
+        self.CheckTriggersThread.start()
 
-    def run_function(self, key):
-        slot = getattr(self, key)
-        print("1 function call", key)
-        slot()
+    def run_function(self, data):
+        key, value = data.popitem()
+        getattr(HomeScreen, key)(self)
+      
 
     def ImageUpdateSlot(self, Image):
         self.GifArea.setPixmap(QPixmap.fromImage(Image))
 
+    def change_screen(self, screen):
+        print("ekran ", screen)
+        self.sql_connection.run("screen", screen)
+
     def set_view_camera(self):
-        if self.request_view == 0:
-            self.sql_connection.run("request_view", "1")
-            self.request_view = 1
-        else:
-            self.sql_connection.run("request_view", "0")
-            self.request_view = 0
+        self.sql_connection.run("request_view", not self.request_view)
+        self.request_view = not self.request_view
 
     def set_scan_person(self):
-        self.sql_connection.run("request_scan", "1")
+        self.sql_connection.run("request_scan", not self.request_scan)
+        self.request_scan = not self.request_scan
 
     def set_record_person(self):
-        self.sql_connection.run("request_capture", "1")
+        self.sql_connection.run("request_capture", not self.request_capture)
+        self.request_capture = not self.request_capture
 
     def camera_start(self):
         self.CameraThread.start()
@@ -214,7 +219,7 @@ class HomeScreen(Window):
         self.CameraThread.mode = "capture"
         self.camera_start()
 
-    def camera_view(self):
+    def request_view(self):
         self.CameraThread.mode = "view"
         self.camera_start()
 
@@ -228,12 +233,40 @@ class HomeScreen(Window):
         self.timer.start(1500)
 
 
+class WeatherScreen(Window):
+    def __init__(self):
+        super(WeatherScreen, self).__init__()
+        loadUi("gui/UI_weather.ui", self)
+        self.sql_connection = UpdateSql()
+        self.timer = QTimer()
+
+    def delay(self):
+        # print("delaying screen...")
+        self.timer.singleShot(3500, self.change_screen)
+
+    def change_screen(self):
+        # print("changing screen")
+        self.sql_connection.run("screen", 0)
+
+    def updateData(self, data):
+        # self.today_img.setPixmap(
+        #     QPixmap('robot/assets/icons/'+data['today_img']).scaledToWidth(100))
+        for key in data:
+            slot = self.findChild(QLabel, key)
+            if slot:
+                slot.setText(data[key])
+                if "icon" in key:
+                    slot.setPixmap(
+                        QPixmap("robot/assets/icons/" + data[key]).scaledToWidth(50))
+
 
 class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.CheckTriggersThread = CheckTriggersThread()
-        self.camera_status = False
+        print("main trigger Thread Id: ", int(
+            self.CheckTriggersThread.currentThreadId()))
+
         self.VBL = QVBoxLayout()
         self.screenList = {
             'home_screen': 0,
@@ -241,35 +274,46 @@ class MainWindow(QWidget):
             'alarm_screen': 2,
             'weather_screen': 3
         }
-
+        self.hava = WeatherScreen()
+        self.current_screen = None
         self.screens = QStackedLayout()
         self.VBL.addLayout(self.screens)
-        # self.screens.setCurrentIndex(0)
-        for w in (HomeScreen(),):
-            self.screens.addWidget(w)
-            if isinstance(w, Window):
-                w.changeWindow.connect(self.screens.setCurrentIndex)
-        self.screens.setCurrentIndex(0)
 
         self.setLayout(self.VBL)
         self.setFixedWidth(400)
         self.setFixedHeight(300)
         # self.showMaximized()
-        self.CheckTriggersThread.Trigger.connect(self.run_function)
+
+        for w in (HomeScreen(), WeatherScreen()):
+            self.screens.addWidget(w)
+            if isinstance(w, Window):
+                w.changeWindow.connect(self.screens.setCurrentIndex)
+        self.screens.setCurrentIndex(0)
+
+        self.CheckTriggersThread.ScreenTrigger.connect(self.change_screen)
         self.CheckTriggersThread.start()
 
-    def update_screen(self, screen):
-        self.screens.setCurrentIndex(screen)
-
-    def run_function(self, key):
-        screen_1_items = ["view_camera", "request_scan",
-                          "request_capture", "request_train_face"]
-        if key in screen_1_items:
-            self.screens.setCurrentIndex(0)
+    def change_screen(self, data):
+        # if new screen different than existing one
+        if data['screen'] != self.screens.currentIndex():
+            #set current screen index to new one
+            self.screens.setCurrentIndex(int(data['screen']))
+            #if there is a delay function of current widget run it
+            if hasattr(self.screens.currentWidget(), "delay"):
+                self.screens.currentWidget().delay()
 
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)
+    App.setStyle('Breeze')
     Root = MainWindow()
     Root.show()
     sys.exit(App.exec())
+
+# herhangi bir widget yaratma ve tekrar kullanma ###################33
+# def createLabel(self, parent, objName, text):
+#     label = QLabel(parent)
+#     label.setGeometry(QRect(0, 0, 921, 91))
+#     label.setText(text)
+#     label.setObjectName(objName)
+#     return label
