@@ -9,7 +9,7 @@ class LedIndicator(QAbstractButton):
     def __init__(self, parent=None):
         QAbstractButton.__init__(self, parent)
 
-        self.setMinimumSize(50, 12)
+        self.setMinimumSize(12, 12)
         self.setCheckable(True)
         # Green
         self.on_color_1 = QColor(0, 255, 0)

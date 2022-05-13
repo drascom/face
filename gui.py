@@ -1,5 +1,4 @@
 import sys
-import time
 from xmlrpc.client import boolean
 from PyQt5.QtGui import QMovie, QPixmap, QImage, QFont
 from PyQt5.QtWidgets import *
@@ -7,9 +6,10 @@ from PyQt5.QtCore import *
 from PyQt5.uic import loadUi
 from PyQt5 import QtMultimedia
 import cv2
+from pathlib import Path
+
 from database import DataRecords
-from Camera import scan_face, capture_face, view_face, convert_image
-from train import train_data
+from Camera import scan_face, capture_face,convert_image,train_data
 from LedIndicatorWidget import *
 
 
@@ -77,6 +77,7 @@ class CameraThread(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.CheckTriggersThread = CheckTriggersThread()
+        self.sql_connection = UpdateSql()
         self.ThreadActive = False
         self.mode = None
 
@@ -90,7 +91,6 @@ class CameraThread(QThread):
                 ret, frame = self.capture.read()
                 if ret:
                     Pic = convert_image(frame)
-                    # Pic = view_face(frame)
                     self.ImageUpdate.emit(Pic)
                 else:
                     # if camera is not pluggedin try again
@@ -101,14 +101,29 @@ class CameraThread(QThread):
             # stop openvc camera imutils will open camera again
             self.capture.release()
             person = scan_face()
-            self.PersonUpdate.emit(person)
+            if person:
+                self.sql_connection.run("request_scan", 0)
+                self.PersonUpdate.emit(person)
             return
         elif self.mode == "capture":
-            # stop openvc camera imutils will open camera again
+            # name = input('isim > ')
+            name = "a"
+            Path("camera/dataset/"+name).mkdir(parents=True, exist_ok=True)
+            img_counter = 1
+            while img_counter < 150:
+                ret, frame = self.capture.read()
+                if not ret:
+                    print("failed to grab frame")
+                    break
+                pic = convert_image(frame)
+                self.ImageUpdate.emit(pic)
+                if img_counter % 6 == 0:
+                    capture_face(frame, name, img_counter)
+                img_counter += 1
             self.capture.release()
-            name = input('isim > ')
-            capture_face(name)
-            return
+            self.PersonUpdate.emit("a")
+            train_data()
+            self.sql_connection.run("request_capture", 0)
 
     def stop(self):
         self.ThreadActive = False
@@ -130,24 +145,23 @@ class Window(QWidget):
 class MainGif(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
-
         self.setAlignment(Qt.AlignCenter)
-        font = QFont('Arial', 24, QFont.Bold)
+        font = QFont('Arial', 18, QFont.Bold)
         self.setFont(font)
-        self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
         self.setScaledContents(True)
-        self.setText('init')
-        # self.change_image('main')
+        # self.update_gif('main')
         self.timer = QTimer()
 
     def changeText(self, text):
         self.setText(text)
 
-    def change_image(self,img_name):
-        self.timer.singleShot(1000,lambda: self.play_gif(img_name))
+    def update_frame(self, frame):
+        self.setPixmap(QPixmap.fromImage(frame))
+
+    def update_gif(self, img_name):
+        self.timer.singleShot(100, lambda: self.play_gif(img_name))
 
     def play_gif(self, img_name):
-        print("gif change run", img_name)
         movie = QMovie('images/faces/'+str(img_name)+'.gif')
         self.setMovie(movie)
         movie.start()
@@ -179,19 +193,24 @@ class HomeScreen(Window):
         self.BTN_2 = QPushButton("view")
         self.BTN_2.setCheckable(True)
         self.HBL.addWidget(self.BTN_2)
-        self.led1 = LedIndicator(self)
-        self.led1.setDisabled(True)
-        self.led1.setText("test")
-        self.HBL.addWidget(self.led1)
         self.BTN_2.clicked.connect(self.set_view_camera)
+        self.led2 = LedIndicator(self)
+        self.led2.setDisabled(True)
+        self.HBL.addWidget(self.led2)
         self.BTN_3 = QPushButton("scan")
         self.BTN_3.setCheckable(True)
         self.HBL.addWidget(self.BTN_3)
         self.BTN_3.clicked.connect(self.set_scan_person)
+        self.led3 = LedIndicator(self)
+        self.led3.setDisabled(True)
+        self.HBL.addWidget(self.led3)
         self.BTN_4 = QPushButton("record")
         self.BTN_4.setCheckable(True)
         self.HBL.addWidget(self.BTN_4)
         self.BTN_4.clicked.connect(self.set_record_person)
+        self.led4 = LedIndicator(self)
+        self.led4.setDisabled(True)
+        self.HBL.addWidget(self.led4)
         self.setLayout(self.VBL)
         self.CheckTriggersThread.Trigger.connect(self.run_function)
         self.CheckTriggersThread.start()
@@ -199,11 +218,9 @@ class HomeScreen(Window):
     # those functions runs with buttons
 
     def change_screen(self, screen):
-        print("ekran ", screen)
         self.sql_connection.run("section", screen)
 
     def set_view_camera(self):
-        self.led1.setChecked(not self.led1.isChecked())
         self.sql_connection.run("request_view", not self.request_view_value)
 
     def set_scan_person(self):
@@ -230,43 +247,51 @@ class HomeScreen(Window):
                 getattr(HomeScreen, key)(self, value)
 
     def request_view(self, value):
-        print("view called ", self.request_view_value, value)
         if self.request_view_value != value:
+            self.led2.setChecked(value)
             if value == 1:
                 self.CameraThread.mode = "view"
                 self._camera_start()
-            elif value == 0:
+            else:
                 self._camera_stop()
-            self.GifArea.change_image('wakeup')
+            self.GifArea.update_gif('wakeup')
         self.request_view_value = value
 
-    # def request_scan(self, value):
-    #     if int(self.request_scan_value) != int(value):
-    #         if value == 0:
-    #             self.CameraThread.mode = "scan"
-    #             self._camera_start()
-    #         else:
-    #             self._camera_stop()
-    #     self.request_scan_value = value
-    # def request_capture(self, value):
-    #     if self.request_capture_value != value:
-    #         if value == 0 :
-    #             self.CameraThread.mode = "capture"
-    #             self._camera_start()
-    #         else:
-    #             self._camera_stop()
-    #     self.request_capture_value = value
+    def request_scan(self, value):
+        if self.request_scan_value != value:
+            self.led3.setChecked(value)
+            if value == 1:
+                self.CameraThread.mode = "scan"
+                self._camera_start()
+                self.GifArea.update_gif('faceid_scan')
+            else:
+                self._camera_stop()
+                self.timer.singleShot(
+                    1500, lambda:  self.GifArea.update_gif('faceid_confirm'))
+                self.timer.singleShot(
+                    1500, lambda:  self.GifArea.update_gif('wakeup'))
+        self.request_scan_value = value
+
+    def request_capture(self, value):
+        if self.request_capture_value != value:
+            self.led4.setChecked(value)
+            if value == 1:
+                self.CameraThread.mode = "capture"
+                self._camera_start()
+            else:
+                self._camera_stop()
+                self.timer.singleShot(
+                    1500, lambda:  self.GifArea.update_gif('wakeup'))
+        self.request_capture_value = value
 
     # those functions runs  with camera thread
 
     def ImageUpdateSlot(self, Image):
-        self.GifArea.setPixmap(QPixmap.fromImage(Image))
+        self.GifArea.update_frame(Image)
 
-    def PersonFoundSlot(self, Data):
-        self.GifArea.change_image(Data['image'])
-        print('[INFO] User Found: ', Data['name'])
-        self.timer.timeout.connect(lambda screen=0: self.update_screen(screen))
-        self.timer.start(1500)
+    def PersonFoundSlot(self, name):
+        self.GifArea.update_gif('faceid_confirm')
+        print('[INFO] User Found: ', name)
 
 
 class WeatherScreen(Window):

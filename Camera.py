@@ -134,24 +134,13 @@ def scan_face():
     
 
 
-def capture_face(name):
-    # name = input('> Isim: ')
-    Path("camera/dataset/"+name).mkdir(parents=True, exist_ok=True)
-    capture = cv2.VideoCapture(0)
-    img_counter = 0
-    while img_counter < 20:
-        ret, frame = capture.read()
-        if not ret:
-            print("failed to grab frame")
-            break
-        convert_image(frame)
-        img_name = "camera/dataset/" + name + \
-            "/image_{}.jpg".format(img_counter)
-        cv2.imwrite(img_name, frame)
-        print("{} written!".format(img_name))
-        img_counter += 1
-    capture.release()
-    train_data()
+def capture_face(frame,name,img_counter):
+    img_name = "camera/dataset/" + name + \
+        "/image_{}.jpg".format(img_counter)
+    cv2.imwrite(img_name, frame)
+    print("{} written!".format(img_name))
+       
+   
 
 
 def train_data():
