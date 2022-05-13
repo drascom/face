@@ -13,8 +13,7 @@ class DataRecords:
         if check.fetchone()[0] == 0:
             cursor.execute("CREATE TABLE IF NOT EXISTS db("
                            "id TEXT,"
-                           "screen NUMERIC DEFAULT(0),"
-                           "view_camera BOOLEAN DEFAULT(FALSE),"
+                           "section NUMERIC DEFAULT(0),"
                            "request_scan BOOLEAN DEFAULT(FALSE),"
                            "request_capture BOOLEAN DEFAULT(FALSE),"
                            "request_view BOOLEAN DEFAULT(FALSE),"
@@ -151,22 +150,6 @@ class DataRecords:
             return {'err': 'Data record not found'}
         conn.commit()
 
-    def request_scan(self, value):
-        conn = sqlite3.connect('main.db')
-        cursor = conn.cursor()
-
-        exist = cursor.execute(
-            "select request_scan from db where id = ?", (0,)).fetchone()
-        if exist:
-            sql_update_query = """Update db set request_scan = ? WHERE id = ?"""
-            data = ('1', '0')
-            cursor.execute(sql_update_query, data)
-            conn.commit()
-            print("Scan activated ")
-            self.respond = self.getData()
-        else:
-            self.respond = {'err': 'Scan cannot be activated'}
-        return self.respond
 
     def request(self, column, value):
         conn = sqlite3.connect('main.db')
@@ -179,7 +162,9 @@ class DataRecords:
             data = (value, '0')
             cursor.execute(sql_update_query, data)
             conn.commit()
-            print(column + " activated ")
+            print("DB Gelen Value: ",value)
+            status = " activated " if value else " deactivated" 
+            print(column + status)
             self.respond = self.getData()
         else:
             self.respond = {'err': column + 'cannot be activated'}
