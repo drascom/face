@@ -11,6 +11,7 @@ from PyQt5 import QtMultimedia
 import cv2
 from pathlib import Path
 
+from database import DataRecords
 from Camera import scan_face, capture_face, convert_image, train_data
 from Talk import say as Talk
 from Listen import listen_google as Listen
@@ -19,12 +20,51 @@ from ServerBrain import Brain
 # reusable widget definitions
 
 
+class WriteSql(QThread):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.DataRecords = DataRecords()
+        self.ThreadActive = False
+
+    def run(self, function_name, value):
+        self.ThreadActive = True
+        while self.ThreadActive:
+            self.DataRecords.request(function_name, value)
+            self.stop()
+
+    def stop(self):
+        self.ThreadActive = False
+
+
+class ReadSql(QThread):
+    Data = pyqtSignal(object)
+    ScreenTrigger = pyqtSignal(object)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.DataRecords = DataRecords()
+        self.ThreadActive = False
+        self.values = None
+
+    def run(self):
+        self.ThreadActive = True
+        while self.ThreadActive:
+            self.msleep(500)
+            self.values = self.DataRecords.getData()
+            self.Data.emit(self.values)
+            self.ScreenTrigger.emit({'section': self.values['section']})
+
+    def stop(self):
+        self.ThreadActive = False
+
+
 class CameraThread(QThread):
     ImageUpdate = pyqtSignal(QImage)
     PersonUpdate = pyqtSignal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.WriteSql = WriteSql()
         self.ThreadActive = False
         self.mode = None
 
@@ -43,12 +83,14 @@ class CameraThread(QThread):
                     # if camera is not pluggedin try again
                     self.capture.release()
                     self.capture = cv2.VideoCapture(0)
+            self.WriteSql.run("request_view", 0)
             self.capture.release()
         elif self.mode == "scan":
             # stop openvc camera imutils will open camera again
             self.capture.release()
             person = scan_face()
             if person:
+                self.WriteSql.run("request_scan", 0)
                 self.PersonUpdate.emit(person)
             return
         elif self.mode == "capture":
@@ -69,6 +111,7 @@ class CameraThread(QThread):
             self.capture.release()
             self.PersonUpdate.emit("a")
             train_data()
+            self.WriteSql.run("request_capture", 0)
 
     def stop(self):
         self.ThreadActive = False
@@ -89,12 +132,28 @@ class MainThread(QThread):
             # self.DataUpdate.emit(command)
 
 
-class SettingsScreen(QWidget):
+class Window(QWidget):
     changeWindow = pyqtSignal(int)
+    CameraThread = CameraThread()
+    WriteSql = WriteSql()
+    ReadSql = ReadSql()
+    ReadSql.start()
 
+    def changeTo(self, index):
+        def callback():
+            self.changeWindow.emit(index)
+
+        return callback
+# reusable widget definitions
+
+
+class SettingsScreen(Window):
     def __init__(self):
-        super().__init__()
+        super(SettingsScreen, self).__init__()
         loadUi("gui/UI_settings.ui", self)
+        self.WriteSql = WriteSql()
+        self.ReadSql = ReadSql()
+        self.ReadSql.start()
         self.STATUS_request_view = False
         self.STATUS_request_scan = False
         self.STATUS_request_capture = False
@@ -109,12 +168,11 @@ class SettingsScreen(QWidget):
         self.weather_screen_BTN.clicked.connect(lambda: self.change_screen(2))
         self.clock_screen_BTN.clicked.connect(lambda: self.change_screen(3))
         # self.led_request_view.setPixmap(QPixmap('images/icons/led-red-on.png'))
+        self.ReadSql.Data.connect(self.check_running_functions)
     # those functions runs with buttons
-        self.change_screen(1)
 
     def change_screen(self, screen):
-        print("emitted 1")
-        self.changeWindow.emit(screen)
+        self.WriteSql.run("section", screen)
 
     def check_running_functions(self, row):
         for key, value in row.items():
@@ -131,14 +189,15 @@ class SettingsScreen(QWidget):
                 setattr(self, status, True if value else False)
 
     def set_view(self):
-        print("view clicked")
-        self.change_screen(1)
+        self.WriteSql.run("request_view", not self.STATUS_request_view)
 
     def set_scan(self):
+        self.WriteSql.run("request_scan", not self.STATUS_request_scan)
         self.change_screen(1)
 
     def set_record(self):
-        self.change_screen(1)
+        self.WriteSql.run("request_capture", not self.STATUS_request_capture)
+        # self.change_screen(1)
 
     def set_think(self):
         print("set_think command")
@@ -150,9 +209,7 @@ class SettingsScreen(QWidget):
         print("set listen command")
 
 
-class CameraScreen(QWidget):
-    changeWindow = pyqtSignal(int)
-
+class CameraScreen(Window):
     def __init__(self):
         super(CameraScreen, self).__init__()
         loadUi("gui/UI_home.ui", self)
@@ -161,14 +218,15 @@ class CameraScreen(QWidget):
         self.request_scan_value = 0
         self.request_capture_value = 0
         self.timer = QTimer()
+        self.ReadSql.Data.connect(self.run_function)
 
     def screen_delay(self):
         # print("delaying screen...")
         self.timer.singleShot(3500, lambda: self.change_screen(0))
 
     def change_screen(self, screen):
-        print("emitted 2")
-        self.changeWindow.emit(screen)
+        # print("changing screen")
+        self.WriteSql.run("section", screen)
 
     # this function runs via other functions
     def changeText(self, text):
@@ -191,10 +249,18 @@ class CameraScreen(QWidget):
         self.CameraThread.start()
 
     def _camera_stop(self):
+        self.WriteSql("request_view",0)
         print("Camera Stop Called")
         self.CameraThread.stop()
 
+    # those functions runs with trigger thread runs on/off by true/false
+    def run_function(self, data):
+        for key, value in data.items():
+            if hasattr(CameraScreen, key):
+                getattr(CameraScreen, key)(self, value)
+
     def request_view(self, value):
+        print("init",value,self.request_view_value)
         if value == 0:
             return
         self.request_view_value = value
@@ -240,9 +306,7 @@ class CameraScreen(QWidget):
         print('[INFO] User Found: ', name)
 
 
-class WeatherScreen(QWidget):
-    changeWindow = pyqtSignal(int)
-
+class WeatherScreen(Window):
     def __init__(self):
         super(WeatherScreen, self).__init__()
         loadUi("gui/UI_weather.ui", self)
@@ -253,7 +317,8 @@ class WeatherScreen(QWidget):
         self.timer.singleShot(3500, self.change_screen)
 
     def change_screen(self):
-        print("changing screen")
+        # print("changing screen")
+        self.WriteSql.run("section", 0)
 
     def updateData(self, data):
         # self.today_img.setPixmap(
@@ -267,85 +332,42 @@ class WeatherScreen(QWidget):
                         QPixmap("robot/assets/icons/" + data[key]).scaledToWidth(50))
 
 
-class TopBar(QWidget):
-    changeWindow = pyqtSignal(int)
-
+class MainWindow(QWidget):
     def __init__(self):
-        super().__init__()
-        self.initUI()
+        super(MainWindow, self).__init__()
+        self.ReadSql = ReadSql()
+        self.WriteSql = WriteSql()
+        self.VBL = QVBoxLayout()
 
-    def initUI(self):
-        self.setAttribute(Qt.WA_StyledBackground)
-        self.labelTime = QLabel()
-        self.labelTime.setStyleSheet(
-            "background-color: rgba(0, 0, 0, 0); color: white")
-        self.BTN_1 = QPushButton(" << ")
-        self.BTN_2 = QPushButton(" >> ")
-        self.BTN_1.clicked.connect(lambda: self.change_page(self.currentPage-1))
-        self.BTN_2.clicked.connect(lambda: self.change_page(self.currentPage+1))
-        self.setStyleSheet("background-color: rgba(0, 191, 255, 0.6)")
-        self.setFixedHeight(30)
-
-        self.currentPage=0
-
-        hbox=QHBoxLayout(self)
-        hbox.setContentsMargins(10, 0, 10, 0)
-        hbox.addWidget(self.labelTime, alignment=Qt.AlignRight)
-        hbox.addWidget(self.BTN_1)
-        hbox.addWidget(self.BTN_2)
-
-        self.timer=QTimer(self)
-        self.timer.setInterval(1000)
-        self.timer.timeout.connect(self.displayTime)
-        self.timer.start()
-
-        self.displayTime()
-    def change_page(self, page):
-        if page >= 0 and page <= 4:
-            self.changeWindow.emit(page)
-
-    def displayTime(self):
-        self.labelTime.setText(dt.now().strftime("%Y/%m/%d %H:%M:%S"))
-
-
-class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.resize(640, 480)
-
-        self.centralwidget=QWidget(self)
-        self.setCentralWidget(self.centralwidget)
-
-        self.topbar=TopBar()
-        VBL=QVBoxLayout(self.centralwidget)
-        VBL.setContentsMargins(0, 0, 0, 0)
-        VBL.addWidget(self.topbar)
-        self.topbar.changeWindow.connect(self.default_screen)
-
-        self.screens=QStackedLayout()
-        VBL.addLayout(self.screens)
+        self.screens = QStackedLayout()
+        self.VBL.addLayout(self.screens)
+        self.setLayout(self.VBL)
+        self.setFixedWidth(640)
+        self.setFixedHeight(480)
         # self.showMaximized()
-        self.screenList={
+        self.screenList = {
             'settings_screen': 0,
             'camera_screen': 1,
             'weather_screen': 2,
             'time_screen': 3,
             'alarm_screen': 4,
         }
-        for index, item in enumerate([SettingsScreen(), CameraScreen(), WeatherScreen()]):
-            screenName="screen_"+str(index)
-            setattr(self, screenName, item)
-            self.screens.addWidget(getattr(self, screenName))
-            getattr(self, screenName).changeWindow.connect(self.default_screen)
+        for w in (SettingsScreen(), CameraScreen(), WeatherScreen()):
+            self.screens.addWidget(w)
+            if isinstance(w, Window):
+                w.changeWindow.connect(self.screens.setCurrentIndex)
 
-        self.worker=MainThread()
+        self.ReadSql.ScreenTrigger.connect(self.change_screen)
+        self.ReadSql.start()
+
+        self.worker = MainThread()
         self.worker.start()
-        self.screens.setCurrentIndex(0)
+        self.default_screen(0)
 
-    def default_screen(self, data):
-        print("main windows screen change", data)
-        self.screens.setCurrentIndex(data)
-        self.topbar.currentPage=data
+    def default_screen(self, screen):
+        # set custom screen
+        self.screens.setCurrentIndex(screen)
+        self.WriteSql.run("section", screen)
 
     def change_screen(self, data):
         # if new screen different than existing one
@@ -358,9 +380,9 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    App=QApplication(sys.argv)
+    App = QApplication(sys.argv)
     App.setStyle('Breeze')
-    Root=MainWindow()
+    Root = MainWindow()
     Root.show()
     sys.exit(App.exec())
 
