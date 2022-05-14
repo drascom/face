@@ -35,9 +35,9 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>10</y>
+      <y>0</y>
       <width>431</width>
-      <height>511</height>
+      <height>471</height>
      </rect>
     </property>
     <property name="font">
@@ -53,8 +53,8 @@
     <widget class="QGroupBox" name="groupBoxSpeak">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>20</y>
+       <x>20</x>
+       <y>30</y>
        <width>41</width>
        <height>51</height>
       </rect>
@@ -69,11 +69,11 @@
      <property name="title">
       <string>View</string>
      </property>
-     <widget class="QLabel" name="LED_request_view">
+     <widget class="QLabel" name="LED_VIEW">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>20</y>
+        <y>25</y>
         <width>21</width>
         <height>21</height>
        </rect>
@@ -99,11 +99,11 @@
       </property>
      </widget>
     </widget>
-    <widget class="QGroupBox" name="groupBoxCurrentFan2">
+    <widget class="QGroupBox" name="groupBoxMainBattery">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>70</y>
+       <x>20</x>
+       <y>80</y>
        <width>41</width>
        <height>51</height>
       </rect>
@@ -118,11 +118,11 @@
      <property name="title">
       <string>Scan</string>
      </property>
-     <widget class="QLabel" name="LED_request_scan">
+     <widget class="QLabel" name="LED_SCAN">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>20</y>
+        <y>25</y>
         <width>21</width>
         <height>21</height>
        </rect>
@@ -151,8 +151,8 @@
     <widget class="QGroupBox" name="groupBoxCurrentFan3">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>120</y>
+       <x>20</x>
+       <y>130</y>
        <width>41</width>
        <height>51</height>
       </rect>
@@ -167,11 +167,11 @@
      <property name="title">
       <string>Capture</string>
      </property>
-     <widget class="QLabel" name="LED_request_capture">
+     <widget class="QLabel" name="LED_CAPTURE">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>20</y>
+        <y>25</y>
         <width>21</width>
         <height>21</height>
        </rect>
@@ -200,8 +200,8 @@
     <widget class="QGroupBox" name="groupBoxCurrentFan4">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>170</y>
+       <x>20</x>
+       <y>180</y>
        <width>41</width>
        <height>51</height>
       </rect>
@@ -220,7 +220,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>20</y>
+        <y>25</y>
         <width>21</width>
         <height>21</height>
        </rect>
@@ -249,8 +249,8 @@
     <widget class="QGroupBox" name="groupBoxCurrentFan5">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>220</y>
+       <x>20</x>
+       <y>230</y>
        <width>41</width>
        <height>51</height>
       </rect>
@@ -269,7 +269,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>20</y>
+        <y>25</y>
         <width>21</width>
         <height>21</height>
        </rect>
@@ -298,8 +298,8 @@
     <widget class="QGroupBox" name="groupBoxCurrentFan6">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>270</y>
+       <x>20</x>
+       <y>280</y>
        <width>41</width>
        <height>51</height>
       </rect>
@@ -318,7 +318,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>20</y>
+        <y>25</y>
         <width>21</width>
         <height>21</height>
        </rect>
@@ -449,7 +449,7 @@
        </font>
       </property>
       <property name="text">
-       <string>°C</string>
+       <string>°Volt</string>
       </property>
      </widget>
      <widget class="QLCDNumber" name="lcdNumberCurrentGPU">
@@ -512,7 +512,7 @@
        </font>
       </property>
       <property name="text">
-       <string>°C</string>
+       <string>°Volt</string>
       </property>
      </widget>
      <widget class="QLCDNumber" name="lcdNumberCurrentGPU_2">
@@ -540,13 +540,13 @@
      </widget>
     </widget>
    </widget>
-   <widget class="QGroupBox" name="groupBoxCurrentFanStatus_2">
+   <widget class="QGroupBox" name="groupBoxMotorBattery">
     <property name="geometry">
      <rect>
       <x>440</x>
       <y>10</y>
       <width>191</width>
-      <height>471</height>
+      <height>461</height>
      </rect>
     </property>
     <property name="font">
@@ -571,7 +571,7 @@
      <property name="title">
       <string>Camera</string>
      </property>
-     <widget class="QPushButton" name="BTN_request_view">
+     <widget class="QPushButton" name="BTN_view">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -590,7 +590,7 @@
        <bool>false</bool>
       </property>
      </widget>
-     <widget class="QPushButton" name="BTN_request_scan">
+     <widget class="QPushButton" name="BTN_scan">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -606,7 +606,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QPushButton" name="BTN_request_capture">
+     <widget class="QPushButton" name="BTN_capture">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -712,7 +712,7 @@
        <string>Main</string>
       </property>
       <property name="checkable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="weather_screen_BTN">
@@ -728,7 +728,7 @@
        <string>Weather</string>
       </property>
       <property name="checkable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="clock_screen_BTN">
@@ -744,7 +744,7 @@
        <string>Clock</string>
       </property>
       <property name="checkable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
     </widget>

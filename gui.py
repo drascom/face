@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import threading
 from datetime import datetime as dt, timedelta
 from xmlrpc.client import boolean
 from PyQt5.QtGui import QMovie, QPixmap, QImage, QFont
@@ -16,7 +17,31 @@ from Talk import say as Talk
 from Listen import listen_google as Listen
 from ServerBrain import Brain
 
-# reusable widget definitions
+
+class Communicate(QObject):
+    MainSignal = pyqtSignal(object)
+
+
+class FunctionThread(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    CameraView = pyqtSignal(object)
+    FunctionSelect = pyqtSignal(object)
+
+    def __init__(self):
+        super(FunctionThread, self).__init__()
+        self.CameraView.connect(self.camera_view)
+        self.FunctionSelect.connect(self.function_select)
+
+    @pyqtSlot(object)
+    def camera_view(self,data):
+        print('T_Id:', threading.get_ident(), data)
+
+    @pyqtSlot(object)
+    def function_select(self, data,):
+        if hasattr(self, data['function_name']):
+            getattr(self, data['function_name'])(data['data'])
+        self.finished.emit()
 
 
 class CameraThread(QThread):
@@ -95,25 +120,36 @@ class SettingsScreen(QWidget):
     def __init__(self):
         super().__init__()
         loadUi("gui/UI_settings.ui", self)
-        self.STATUS_request_view = False
-        self.STATUS_request_scan = False
-        self.STATUS_request_capture = False
+        self.STATUS_view = False
+        self.STATUS_scan = False
+        self.STATUS_capture = False
 
-        self.BTN_request_view.clicked.connect(self.set_view)
-        self.BTN_request_scan.clicked.connect(self.set_scan)
-        self.BTN_request_capture.clicked.connect(self.set_record)
+        self.BTN_view.clicked.connect(self.set_view)
+        self.BTN_scan.clicked.connect(self.set_scan)
+        self.BTN_capture.clicked.connect(self.set_record)
         self.think_BTN.clicked.connect(self.set_think)
         self.talk_BTN.clicked.connect(self.set_talk)
         self.listen_BTN.clicked.connect(self.set_listen)
         self.main_screen_BTN.clicked.connect(lambda: self.change_screen(1))
         self.weather_screen_BTN.clicked.connect(lambda: self.change_screen(2))
         self.clock_screen_BTN.clicked.connect(lambda: self.change_screen(3))
-        # self.led_request_view.setPixmap(QPixmap('images/icons/led-red-on.png'))
-    # those functions runs with buttons
+        self.LED_VIEW.setPixmap(QPixmap('images/icons/led-red-on.png'))
+
+        self.thread = QThread()
+        self.thread.start()
+        self.worker = FunctionThread()
+        self.worker.moveToThread(self.thread)
+
+        self.master = Communicate()
+        self.master.MainSignal.connect(self.worker.function_select)
+
+        self.worker.finished.connect(self.thread.quit)
+
         self.change_screen(1)
 
+    # those functions runs with buttons
+
     def change_screen(self, screen):
-        print("emitted 1")
         self.changeWindow.emit(screen)
 
     def check_running_functions(self, row):
@@ -131,7 +167,7 @@ class SettingsScreen(QWidget):
                 setattr(self, status, True if value else False)
 
     def set_view(self):
-        print("view clicked")
+        self.master.MainSignal.emit({'function_name':'camera_view','data':'test'})
         self.change_screen(1)
 
     def set_scan(self):
@@ -281,28 +317,30 @@ class TopBar(QWidget):
             "background-color: rgba(0, 0, 0, 0); color: white")
         self.BTN_1 = QPushButton(" << ")
         self.BTN_2 = QPushButton(" >> ")
-        self.BTN_1.clicked.connect(lambda: self.change_page(self.currentPage-1))
-        self.BTN_2.clicked.connect(lambda: self.change_page(self.currentPage+1))
+        self.BTN_1.clicked.connect(
+            lambda: self.change_page(self.currentPage-1))
+        self.BTN_2.clicked.connect(
+            lambda: self.change_page(self.currentPage+1))
         self.setStyleSheet("background-color: rgba(0, 191, 255, 0.6)")
         self.setFixedHeight(30)
 
-        self.currentPage=0
+        self.currentPage = 0
 
-        hbox=QHBoxLayout(self)
+        hbox = QHBoxLayout(self)
         hbox.setContentsMargins(10, 0, 10, 0)
-        hbox.addWidget(self.labelTime, alignment=Qt.AlignRight)
         hbox.addWidget(self.BTN_1)
+        hbox.addWidget(self.labelTime, alignment=Qt.AlignRight)
         hbox.addWidget(self.BTN_2)
 
-        self.timer=QTimer(self)
+        self.timer = QTimer(self)
         self.timer.setInterval(1000)
         self.timer.timeout.connect(self.displayTime)
         self.timer.start()
 
         self.displayTime()
+
     def change_page(self, page):
-        if page >= 0 and page <= 4:
-            self.changeWindow.emit(page)
+        self.changeWindow.emit(page)
 
     def displayTime(self):
         self.labelTime.setText(dt.now().strftime("%Y/%m/%d %H:%M:%S"))
@@ -313,19 +351,19 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.resize(640, 480)
 
-        self.centralwidget=QWidget(self)
+        self.centralwidget = QWidget(self)
         self.setCentralWidget(self.centralwidget)
 
-        self.topbar=TopBar()
-        VBL=QVBoxLayout(self.centralwidget)
+        self.topbar = TopBar()
+        VBL = QVBoxLayout(self.centralwidget)
         VBL.setContentsMargins(0, 0, 0, 0)
         VBL.addWidget(self.topbar)
         self.topbar.changeWindow.connect(self.default_screen)
 
-        self.screens=QStackedLayout()
+        self.screens = QStackedLayout()
         VBL.addLayout(self.screens)
         # self.showMaximized()
-        self.screenList={
+        self.screenList = {
             'settings_screen': 0,
             'camera_screen': 1,
             'weather_screen': 2,
@@ -333,19 +371,17 @@ class MainWindow(QMainWindow):
             'alarm_screen': 4,
         }
         for index, item in enumerate([SettingsScreen(), CameraScreen(), WeatherScreen()]):
-            screenName="screen_"+str(index)
+            screenName = "screen_"+str(index)
             setattr(self, screenName, item)
             self.screens.addWidget(getattr(self, screenName))
             getattr(self, screenName).changeWindow.connect(self.default_screen)
 
-        self.worker=MainThread()
-        self.worker.start()
         self.screens.setCurrentIndex(0)
 
-    def default_screen(self, data):
-        print("main windows screen change", data)
-        self.screens.setCurrentIndex(data)
-        self.topbar.currentPage=data
+    def default_screen(self, page):
+        if page >= 0 and page <= len(self.screens):
+            self.screens.setCurrentIndex(page)
+            self.topbar.currentPage = page
 
     def change_screen(self, data):
         # if new screen different than existing one
@@ -358,9 +394,9 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    App=QApplication(sys.argv)
+    App = QApplication(sys.argv)
     App.setStyle('Breeze')
-    Root=MainWindow()
+    Root = MainWindow()
     Root.show()
     sys.exit(App.exec())
 
