@@ -1,4 +1,7 @@
 import sys
+import os
+import time
+from datetime import datetime as dt, timedelta
 from xmlrpc.client import boolean
 from PyQt5.QtGui import QMovie, QPixmap, QImage, QFont
 from PyQt5.QtWidgets import *
@@ -9,17 +12,32 @@ import cv2
 from pathlib import Path
 
 from database import DataRecords
-from Camera import scan_face, capture_face,convert_image,train_data
-from LedIndicatorWidget import *
+from Camera import scan_face, capture_face, convert_image, train_data
+from Talk import say as Talk
+from Listen import listen_google as Listen
+from ServerBrain import Brain
+
+# reusable widget definitions
 
 
-class UpdateSql(QThread):
+class Window(QWidget):
+    changeWindow = pyqtSignal(int)
+
+    def changeTo(self, index):
+        def callback():
+            self.changeWindow.emit(index)
+
+        return callback
+# reusable widget definitions
+
+
+class WriteSql(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.DataRecords = DataRecords()
         self.ThreadActive = False
 
-    def run(self, function_name, value, ):
+    def run(self, function_name, value):
         self.ThreadActive = True
         while self.ThreadActive:
             self.DataRecords.request(function_name, value)
@@ -27,47 +45,28 @@ class UpdateSql(QThread):
 
     def stop(self):
         self.ThreadActive = False
-        # self.wait()
 
 
-class CheckTriggersThread(QThread):
-    Trigger = pyqtSignal(object)
+class ReadSql(QThread):
+    Data = pyqtSignal(object)
     ScreenTrigger = pyqtSignal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.DataRecords = DataRecords()
         self.ThreadActive = False
-        self.triggers = None
+        self.values = None
 
     def run(self):
-        print("Main Thread Start.")
         self.ThreadActive = True
-        activeJobs = []
         while self.ThreadActive:
-            if len(activeJobs) > 1:
-                print(activeJobs)
             self.msleep(500)
-            self.triggers = self.DataRecords.getData()
-            # direct output
-            self.Trigger.emit(self.triggers)
-            self.ScreenTrigger.emit({'section': self.triggers['section']})
-            # filtered output
-            # for key, value in self.triggers.items():
-            #     if key == "screen":
-            #         self.ScreenTrigger.emit({key: value})
-            #     if value == 1:
-            #         if key not in activeJobs:
-            #             activeJobs.append(key)
-            #             self.Trigger.emit({key: value})
-            #     else:
-            #         if key in activeJobs:
-            #             activeJobs.remove(key)
+            self.values = self.DataRecords.getData()
+            self.Data.emit(self.values)
+            self.ScreenTrigger.emit({'section': self.values['section']})
 
     def stop(self):
-        print("Thread Stop")
         self.ThreadActive = False
-        # self.stop()
 
 
 class CameraThread(QThread):
@@ -76,8 +75,7 @@ class CameraThread(QThread):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.CheckTriggersThread = CheckTriggersThread()
-        self.sql_connection = UpdateSql()
+        self.WriteSql = WriteSql()
         self.ThreadActive = False
         self.mode = None
 
@@ -102,7 +100,7 @@ class CameraThread(QThread):
             self.capture.release()
             person = scan_face()
             if person:
-                self.sql_connection.run("request_scan", 0)
+                self.WriteSql.run("request_scan", 0)
                 self.PersonUpdate.emit(person)
             return
         elif self.mode == "capture":
@@ -123,114 +121,130 @@ class CameraThread(QThread):
             self.capture.release()
             self.PersonUpdate.emit("a")
             train_data()
-            self.sql_connection.run("request_capture", 0)
+            self.WriteSql.run("request_capture", 0)
 
     def stop(self):
         self.ThreadActive = False
         self.quit()
 
-# reusable widget definitions
 
-
-class Window(QWidget):
-    changeWindow = pyqtSignal(int)
-
-    def changeTo(self, index):
-        def callback():
-            self.changeWindow.emit(index)
-
-        return callback
-
-
-class MainGif(QLabel):
+class MainThread(QThread):
+    DataUpdate = pyqtSignal(object)
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setAlignment(Qt.AlignCenter)
-        font = QFont('Arial', 18, QFont.Bold)
-        self.setFont(font)
-        self.setScaledContents(True)
-        # self.update_gif('main')
-        self.timer = QTimer()
 
+    def run(self):
+        while True:
+            pass
+            # command = Listen()
+            # print(command)
+            # self.DataUpdate.emit(command)
+
+
+class SettingsScreen(Window):
+    def __init__(self):
+        super(SettingsScreen, self).__init__()
+        loadUi("gui/UI_settings.ui", self)
+        self.WriteSql = WriteSql()
+        self.ReadSql = ReadSql()
+        self.ReadSql.start()
+        self.STATUS_request_view = False
+        self.STATUS_request_scan = False
+        self.STATUS_request_capture = False
+
+        self.BTN_request_view.clicked.connect(self.set_view)
+        self.BTN_request_scan.clicked.connect(self.set_scan)
+        self.BTN_request_capture.clicked.connect(self.set_record)
+        self.think_BTN.clicked.connect(self.set_think)
+        self.talk_BTN.clicked.connect(self.set_talk)
+        self.listen_BTN.clicked.connect(self.set_listen)
+        self.main_screen_BTN.clicked.connect(lambda: self.change_screen(1))
+        self.weather_screen_BTN.clicked.connect(lambda: self.change_screen(2))
+        self.clock_screen_BTN.clicked.connect(lambda: self.change_screen(3))
+        # self.led_request_view.setPixmap(QPixmap('images/icons/led-red-on.png'))
+        self.ReadSql.Data.connect(self.check_running_functions)
+    # those functions runs with buttons
+
+    def change_screen(self, screen):
+        self.WriteSql.run("section", screen)
+
+    def check_running_functions(self, row):
+        for key, value in row.items():
+            led = "LED_"+key
+            button = "BTN_"+key
+            status = "STATUS_"+key
+            if hasattr(self, led):
+                led = getattr(self, led)
+                if value == 1:
+                    led.setPixmap(QPixmap('images/icons/led-green-on.png'))
+                else:
+                    led.setPixmap(QPixmap('images/icons/led-red-on.png'))
+                getattr(self, button).setChecked(value)
+                setattr(self, status, True if value else False)
+
+    def set_view(self):
+        self.WriteSql.run("request_view", not self.STATUS_request_view)
+        # self.change_screen(1)
+
+    def set_scan(self):
+        self.WriteSql.run("request_scan", not self.STATUS_request_scan)
+        # self.change_screen(1)
+
+    def set_record(self):
+        self.WriteSql.run("request_capture", not self.STATUS_request_capture)
+        self.change_screen(1)
+
+    def set_think(self):
+        print("set_think command")
+
+    def set_talk(self):
+        print("set_talk command")
+
+    def set_listen(self):
+        print("set listen command")
+
+
+class MainScreen(Window):
+    def __init__(self):
+        super(MainScreen, self).__init__()
+        loadUi("gui/UI_home.ui", self)
+        self.CameraThread = CameraThread()
+        self.WriteSql = WriteSql()
+        self.ReadSql = ReadSql()
+        self.mainGif.setText("INIT")
+        self.request_view_value = 0
+        self.request_scan_value = 0
+        self.request_capture_value = 0
+        self.timer = QTimer()
+        # self.update_gif("main")
+        # self.request_view(False)
+        # self.request_scan(False)
+        # self.request_capture(False)
+        self.ReadSql.Data.connect(self.run_function)
+
+    def delay(self):
+        # print("delaying screen...")
+        self.timer.singleShot(3500, self.change_screen)
+
+    def change_screen(self):
+        # print("changing screen")
+        self.WriteSql.run("section", 0)
+
+    # this function runs via other functions
     def changeText(self, text):
-        self.setText(text)
+        self.mainGif.setText(text)
 
     def update_frame(self, frame):
-        self.setPixmap(QPixmap.fromImage(frame))
+        self.mainGif.setPixmap(QPixmap.fromImage(frame))
 
     def update_gif(self, img_name):
         self.timer.singleShot(100, lambda: self.play_gif(img_name))
 
     def play_gif(self, img_name):
         movie = QMovie('images/faces/'+str(img_name)+'.gif')
-        self.setMovie(movie)
+        self.mainGif.setMovie(movie)
         movie.start()
-# reusable widget definitions
 
-
-class HomeScreen(Window):
-    def __init__(self):
-        super(HomeScreen, self).__init__()
-        self.sql_connection = UpdateSql()
-        self.CameraThread = CameraThread()
-        self.CheckTriggersThread = CheckTriggersThread()
-        self.request_view_value = "0"
-        self.request_scan_value = 0
-        self.request_capture_value = 0
-        self.timer = QTimer()
-
-        self.VBL = QVBoxLayout()
-        self.GifArea = MainGif()
-        self.GifArea.setText("home")
-        self.VBL.addWidget(self.GifArea)
-        self.HBL = QHBoxLayout()
-        self.VBL.addLayout(self.HBL)
-
-        self.BTN_1 = QPushButton("Weather")
-        # self.BTN_1.clicked.connect(self.changeTo(1))
-        self.HBL.addWidget(self.BTN_1)
-        self.BTN_1.clicked.connect(lambda: self.change_screen(1))
-        self.BTN_2 = QPushButton("view")
-        self.BTN_2.setCheckable(True)
-        self.HBL.addWidget(self.BTN_2)
-        self.BTN_2.clicked.connect(self.set_view_camera)
-        self.led2 = LedIndicator(self)
-        self.led2.setDisabled(True)
-        self.HBL.addWidget(self.led2)
-        self.BTN_3 = QPushButton("scan")
-        self.BTN_3.setCheckable(True)
-        self.HBL.addWidget(self.BTN_3)
-        self.BTN_3.clicked.connect(self.set_scan_person)
-        self.led3 = LedIndicator(self)
-        self.led3.setDisabled(True)
-        self.HBL.addWidget(self.led3)
-        self.BTN_4 = QPushButton("record")
-        self.BTN_4.setCheckable(True)
-        self.HBL.addWidget(self.BTN_4)
-        self.BTN_4.clicked.connect(self.set_record_person)
-        self.led4 = LedIndicator(self)
-        self.led4.setDisabled(True)
-        self.HBL.addWidget(self.led4)
-        self.setLayout(self.VBL)
-        self.CheckTriggersThread.Trigger.connect(self.run_function)
-        self.CheckTriggersThread.start()
-
-    # those functions runs with buttons
-
-    def change_screen(self, screen):
-        self.sql_connection.run("section", screen)
-
-    def set_view_camera(self):
-        self.sql_connection.run("request_view", not self.request_view_value)
-
-    def set_scan_person(self):
-        self.sql_connection.run("request_scan", not self.request_scan_value)
-
-    def set_record_person(self):
-        self.sql_connection.run(
-            "request_capture", not self.request_capture_value)
-
-    # this function runs via other functions
     def _camera_start(self):
         self.CameraThread.start()
         self.CameraThread.ImageUpdate.connect(self.ImageUpdateSlot)
@@ -243,54 +257,51 @@ class HomeScreen(Window):
     # those functions runs with trigger thread runs on/off by true/false
     def run_function(self, data):
         for key, value in data.items():
-            if hasattr(HomeScreen, key):
-                getattr(HomeScreen, key)(self, value)
+            if hasattr(SettingsScreen, key):
+                getattr(SettingsScreen, key)(self, value)
 
     def request_view(self, value):
         if self.request_view_value != value:
-            self.led2.setChecked(value)
             if value == 1:
                 self.CameraThread.mode = "view"
                 self._camera_start()
             else:
                 self._camera_stop()
-            self.GifArea.update_gif('wakeup')
+            self.update_gif('wakeup')
         self.request_view_value = value
 
     def request_scan(self, value):
         if self.request_scan_value != value:
-            self.led3.setChecked(value)
             if value == 1:
                 self.CameraThread.mode = "scan"
                 self._camera_start()
-                self.GifArea.update_gif('faceid_scan')
+                self.update_gif('faceid_scan')
             else:
                 self._camera_stop()
                 self.timer.singleShot(
-                    1500, lambda:  self.GifArea.update_gif('faceid_confirm'))
+                    1500, lambda:  self.update_gif('faceid_confirm'))
                 self.timer.singleShot(
-                    1500, lambda:  self.GifArea.update_gif('wakeup'))
+                    1500, lambda:  self.update_gif('wakeup'))
         self.request_scan_value = value
 
     def request_capture(self, value):
         if self.request_capture_value != value:
-            self.led4.setChecked(value)
             if value == 1:
                 self.CameraThread.mode = "capture"
                 self._camera_start()
             else:
                 self._camera_stop()
                 self.timer.singleShot(
-                    1500, lambda:  self.GifArea.update_gif('wakeup'))
+                    1500, lambda:  self.update_gif('wakeup'))
         self.request_capture_value = value
 
     # those functions runs  with camera thread
 
     def ImageUpdateSlot(self, Image):
-        self.GifArea.update_frame(Image)
+        self.update_frame(Image)
 
     def PersonFoundSlot(self, name):
-        self.GifArea.update_gif('faceid_confirm')
+        self.update_gif('faceid_confirm')
         print('[INFO] User Found: ', name)
 
 
@@ -298,7 +309,7 @@ class WeatherScreen(Window):
     def __init__(self):
         super(WeatherScreen, self).__init__()
         loadUi("gui/UI_weather.ui", self)
-        self.sql_connection = UpdateSql()
+        self.WriteSql = WriteSql()
         self.timer = QTimer()
 
     def delay(self):
@@ -307,7 +318,7 @@ class WeatherScreen(Window):
 
     def change_screen(self):
         # print("changing screen")
-        self.sql_connection.run("section", 0)
+        self.WriteSql.run("section", 0)
 
     def updateData(self, data):
         # self.today_img.setPixmap(
@@ -324,16 +335,15 @@ class WeatherScreen(Window):
 class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.CheckTriggersThread = CheckTriggersThread()
-        print("main trigger Thread Id: ", int(
-            self.CheckTriggersThread.currentThreadId()))
-
+        self.ReadSql = ReadSql()
+        self.WriteSql = WriteSql()
         self.VBL = QVBoxLayout()
         self.screenList = {
-            'home_screen': 0,
-            'time_screen': 1,
-            'alarm_screen': 2,
-            'weather_screen': 3
+            'settings_screen': 0,
+            'main_screen': 1,
+            'weather_screen': 2,
+            'time_screen': 3,
+            'alarm_screen': 4,
         }
         self.hava = WeatherScreen()
         self.current_screen = None
@@ -341,18 +351,26 @@ class MainWindow(QWidget):
         self.VBL.addLayout(self.screens)
 
         self.setLayout(self.VBL)
-        self.setFixedWidth(400)
-        self.setFixedHeight(300)
+        self.setFixedWidth(640)
+        self.setFixedHeight(480)
         # self.showMaximized()
 
-        for w in (HomeScreen(), WeatherScreen()):
+        for w in (SettingsScreen(), MainScreen(), WeatherScreen()):
             self.screens.addWidget(w)
             if isinstance(w, Window):
                 w.changeWindow.connect(self.screens.setCurrentIndex)
-        self.screens.setCurrentIndex(0)
 
-        self.CheckTriggersThread.ScreenTrigger.connect(self.change_screen)
-        self.CheckTriggersThread.start()
+        self.ReadSql.ScreenTrigger.connect(self.change_screen)
+        self.ReadSql.start()
+
+        self.worker = MainThread()
+        self.worker.start()
+        self.default_screen(1)
+
+    def default_screen(self, screen):
+        # set custom screen
+        self.screens.setCurrentIndex(screen)
+        self.WriteSql.run("section", screen)
 
     def change_screen(self, data):
         # if new screen different than existing one

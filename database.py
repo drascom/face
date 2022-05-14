@@ -17,9 +17,6 @@ class DataRecords:
                            "request_scan BOOLEAN DEFAULT(FALSE),"
                            "request_capture BOOLEAN DEFAULT(FALSE),"
                            "request_view BOOLEAN DEFAULT(FALSE),"
-                           "alarm_hour NUMERIC DEFAULT(00),"
-                           "alarm_minute NUMERIC DEFAULT(00),"
-                           "alarm_status BOOLEAN DEFAULT(FALSE)"
                            ")")
             print('Main Table created')
             self.initDefaults()
@@ -33,86 +30,6 @@ class DataRecords:
         print("Init Completed")
         self.getData()
         conn.commit()
-
-    def setHour(self, hour):
-        conn = sqlite3.connect('main.db')
-        cursor = conn.cursor()
-        # hour = text2int(command)
-        if hour is False:
-            print("yanlış gelen saat: ", hour)
-            self.respond = {'err': 'söylediğin bir saat değil.tekrar dene'}
-            return
-        exist = conn.execute(
-            "select alarm_hour from db where id = ?", (1,)).fetchone()
-        try:
-            if exist is None:
-                self.initAlarm()
-                self.setHour(hour)
-            else:
-                sql_update_query = """Update db set hour = ?  WHERE id = ?"""
-                data = (hour, '1')
-                cursor.execute(sql_update_query, data)
-                conn.commit()
-                print("Hour Updated successfully", hour)
-            self.respond = self.getData()
-        except:
-            self.respond = {'err': 'Hour cannot be updated'}
-        return self.respond
-
-    def setMinute(self, min):
-        conn = sqlite3.connect('main.db')
-        cursor = conn.cursor()
-        # min = text2int(min)
-        exist = conn.execute(
-            "select alarm_minute from db where id = ?", (1,)).fetchone()
-        try:
-            if exist is None:
-                self.initAlarm()
-                self.setMinute(min)
-            else:
-                sql_update_query = "Update db set alarm_minute = ?, status = ? WHERE id = ?"
-                data = (min, 'on', '1')
-                cursor.execute(sql_update_query, data)
-                conn.commit()
-                print("Minute Updated successfully", min)
-            self.respond = self.getData()
-        except:
-            self.respond = {'err': 'Minute cannot be updated'}
-        return self.respond
-
-    def disableAlarm(self):
-        conn = sqlite3.connect('main.db')
-        cursor = conn.cursor()
-
-        exist = conn.execute(
-            "select alarm_status from db where id = ?", (1,)).fetchone()
-        if exist:
-            sql_update_query = """Update db set alarm_status = ? WHERE id = ?"""
-            data = ('off', '1')
-            cursor.execute(sql_update_query, data)
-            conn.commit()
-            print("Alarm disabled successfully")
-            self.respond = self.getData()
-        else:
-            self.respond = {'err': 'Minute cannot be updated'}
-        return self.respond
-
-    def enableAlarm(self):
-        conn = sqlite3.connect('main.db')
-        cursor = conn.cursor()
-
-        exist = conn.execute(
-            "select alarm_status from db where id = ?", (1,)).fetchone()
-        if exist:
-            sql_update_query = """Update db set alarm_status = ? WHERE id = ?"""
-            data = ('on', '1')
-            cursor.execute(sql_update_query, data)
-            conn.commit()
-            print("Alarm activated successfully")
-            self.respond = self.getData()
-        else:
-            self.respond = {'err': 'Minute cannot be updated'}
-        return self.respond
 
     def getData(self):
         conn = sqlite3.connect('main.db')
