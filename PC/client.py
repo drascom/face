@@ -104,12 +104,15 @@ class ChatWindow(QMainWindow, ui_form):
         self.sc.connStatus.connect(self.enable_send_button)
 
     def enable_send_button(self, status):
+        self.connStatus = status
+        if status:
+            self.BTN_disconnect.show()
+        else:
+            self.BTN_disconnect.hide()
+        self.BTN_send.setEnabled(status)
+        self.CONNECTION_BAR.setEnabled(not status)
         self.LED_connect.setPixmap(
             QPixmap('icons/led-green-on.png' if status else 'icons/led-red-on.png'))
-        self.BTN_send.setEnabled(status)
-        self.BTN_disconnect.show()
-        self.CONNECTION_BAR.setEnabled(not status)
-        self.connStatus = status
         self.LED_rx_tx.setPixmap(QPixmap(
             'icons/rx-tx-on.png' if (self.flipImage % 2) == 0 else 'icons/rx-tx.png'))
         self.flipImage += 1
