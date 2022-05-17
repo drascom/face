@@ -1,8 +1,6 @@
 <RCC>
-    <qresource prefix="/">
-        <file>images/icons/green-led-on.png</file>
-        <file>images/icons/grid.png</file>
-        <file>images/icons/led-red-on.png</file>
-        <file>images/icons/online.png</file>
-    </qresource>
+  <qresource prefix="/">
+    <file>led-red-on.png</file>
+    <file>led-blue-on.png</file>
+  </qresource>
 </RCC>

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
-    <height>480</height>
+    <width>649</width>
+    <height>483</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -62,7 +62,7 @@
      <property name="title">
       <string>Camera</string>
      </property>
-     <widget class="QPushButton" name="BTN_view">
+     <widget class="QPushButton" name="BTN_camera">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -116,11 +116,11 @@
        <bool>false</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="LED_VIEW">
+     <widget class="QLabel" name="LED_camera">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>30</y>
+        <y>33</y>
         <width>21</width>
         <height>21</height>
        </rect>
@@ -139,13 +139,13 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>../images/icons/led-red-on.png</pixmap>
+       <pixmap>icons/led-red-on.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="LED_SCAN">
+     <widget class="QLabel" name="LED_scan">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -168,13 +168,13 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>:/icons/led-red-on.png</pixmap>
+       <pixmap>icons/led-red-on.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="LED_CAPTURE">
+     <widget class="QLabel" name="LED_capture">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -197,7 +197,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>:/icons/led-red-on.png</pixmap>
+       <pixmap>icons/led-red-on.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -216,7 +216,7 @@
      <property name="title">
       <string>Human</string>
      </property>
-     <widget class="QPushButton" name="think_BTN">
+     <widget class="QPushButton" name="BTN_think">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -232,7 +232,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QPushButton" name="talk_BTN">
+     <widget class="QPushButton" name="BTN_talk">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -248,7 +248,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QPushButton" name="listen_BTN">
+     <widget class="QPushButton" name="BTN_listen">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -264,7 +264,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="led_THINK">
+     <widget class="QLabel" name="LED_think">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -287,13 +287,13 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>:/icons/led-red-on.png</pixmap>
+       <pixmap>icons/led-red-on.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="led_TALK">
+     <widget class="QLabel" name="LED_talk">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -316,13 +316,13 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>:/icons/led-red-on.png</pixmap>
+       <pixmap>icons/led-red-on.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="led_Listen">
+     <widget class="QLabel" name="LED_listen">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -345,7 +345,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap>:/icons/led-red-on.png</pixmap>
+       <pixmap>icons/led-red-on.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -364,7 +364,7 @@
      <property name="title">
       <string>Screen</string>
      </property>
-     <widget class="QPushButton" name="main_screen_BTN">
+     <widget class="QPushButton" name="BTN_main">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -377,10 +377,10 @@
        <string>Main</string>
       </property>
       <property name="checkable">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
      </widget>
-     <widget class="QPushButton" name="weather_screen_BTN">
+     <widget class="QPushButton" name="BTN_weather">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -393,10 +393,10 @@
        <string>Weather</string>
       </property>
       <property name="checkable">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
      </widget>
-     <widget class="QPushButton" name="clock_screen_BTN">
+     <widget class="QPushButton" name="BTN_clock">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -409,17 +409,107 @@
        <string>Clock</string>
       </property>
       <property name="checkable">
-       <bool>false</bool>
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="LED_page_0">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>21</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>icons/led-red-on.png</pixmap>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="LED_page_1">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>60</y>
+        <width>21</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>icons/led-red-on.png</pixmap>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="LED_page_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>90</y>
+        <width>21</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>icons/led-red-on.png</pixmap>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
       </property>
      </widget>
     </widget>
    </widget>
-   <widget class="QGroupBox" name="groupBoxCurrentFanStatus_2">
+   <widget class="QGroupBox" name="CONNECTION_BAR">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>10</x>
       <y>440</y>
-      <width>631</width>
+      <width>621</width>
       <height>31</height>
      </rect>
     </property>
@@ -433,7 +523,7 @@
     <property name="title">
      <string/>
     </property>
-    <widget class="QPushButton" name="btn_connect">
+    <widget class="QPushButton" name="BTN_connect">
      <property name="geometry">
       <rect>
        <x>431</x>
@@ -446,7 +536,7 @@
       <string>Connect</string>
      </property>
     </widget>
-    <widget class="QTextEdit" name="input_ip">
+    <widget class="QTextEdit" name="INPUT_ip">
      <property name="geometry">
       <rect>
        <x>40</x>
@@ -472,7 +562,7 @@
       <string>IP:</string>
      </property>
     </widget>
-    <widget class="QTextEdit" name="input_port">
+    <widget class="QTextEdit" name="INPUT_port">
      <property name="geometry">
       <rect>
        <x>250</x>
@@ -502,9 +592,9 @@
    <widget class="QGroupBox" name="groupBoxCurrentFanStatus_3">
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>10</x>
       <y>0</y>
-      <width>631</width>
+      <width>621</width>
       <height>51</height>
      </rect>
     </property>
@@ -518,13 +608,13 @@
     <property name="title">
      <string/>
     </property>
-    <widget class="QGroupBox" name="groupBoxCurrentCPUTemp">
+    <widget class="QGroupBox" name="groupBoxCurrentCPUTemp_6">
      <property name="geometry">
       <rect>
-       <x>50</x>
-       <y>0</y>
+       <x>500</x>
+       <y>-2</y>
        <width>91</width>
-       <height>41</height>
+       <height>46</height>
       </rect>
      </property>
      <property name="font">
@@ -541,15 +631,15 @@
       <string notr="true"/>
      </property>
      <property name="title">
-      <string>CPU temp</string>
+      <string>Rx/Tx</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
      </property>
-     <widget class="QLabel" name="label_192">
+     <widget class="QLabel" name="LED_rx_tx">
       <property name="geometry">
        <rect>
-        <x>40</x>
+        <x>60</x>
         <y>22</y>
         <width>21</width>
         <height>21</height>
@@ -557,258 +647,248 @@
       </property>
       <property name="font">
        <font>
-        <family>Potti Sreeramulu</family>
         <pointsize>10</pointsize>
         <weight>50</weight>
         <bold>false</bold>
        </font>
       </property>
-      <property name="text">
-       <string>°C</string>
-      </property>
-     </widget>
-     <widget class="QLCDNumber" name="lcdNumberCurrentCPU">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>20</y>
-        <width>41</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>15</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
       </property>
-      <property name="digitCount">
-       <number>3</number>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>icons/rx-tx.png</pixmap>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
       </property>
      </widget>
-     <widget class="QGroupBox" name="CPU_TEMP_GROUP">
+     <widget class="QLabel" name="LED_connect">
       <property name="geometry">
        <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>91</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="autoFillBackground">
-       <bool>false</bool>
-      </property>
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
-      <property name="title">
-       <string>CPU temp</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <widget class="QLabel" name="label_194">
-       <property name="geometry">
-        <rect>
-         <x>40</x>
-         <y>22</y>
-         <width>21</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>Potti Sreeramulu</family>
-         <pointsize>10</pointsize>
-         <weight>50</weight>
-         <bold>false</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>°C</string>
-       </property>
-      </widget>
-      <widget class="QLCDNumber" name="VALUE_cpu_temp">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>20</y>
-         <width>41</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>15</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
-       </property>
-       <property name="digitCount">
-        <number>3</number>
-       </property>
-      </widget>
-     </widget>
-    </widget>
-    <widget class="QGroupBox" name="groupBoxCurrentCPUTemp_4">
-     <property name="geometry">
-      <rect>
-       <x>260</x>
-       <y>0</y>
-       <width>91</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
-     <property name="title">
-      <string>Brain Battery</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <widget class="QLabel" name="label_195">
-      <property name="geometry">
-       <rect>
-        <x>40</x>
-        <y>22</y>
+        <x>10</x>
+        <y>24</y>
         <width>21</width>
         <height>21</height>
        </rect>
       </property>
       <property name="font">
        <font>
-        <family>Potti Sreeramulu</family>
         <pointsize>10</pointsize>
         <weight>50</weight>
         <bold>false</bold>
        </font>
       </property>
-      <property name="text">
-       <string>V</string>
-      </property>
-     </widget>
-     <widget class="QLCDNumber" name="VALUE_brain_battery">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>20</y>
-        <width>41</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>15</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
       <property name="frameShape">
        <enum>QFrame::NoFrame</enum>
       </property>
-      <property name="digitCount">
-       <number>3</number>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>icons/led-red-on.png</pixmap>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
       </property>
      </widget>
     </widget>
-    <widget class="QGroupBox" name="groupBoxCurrentCPUTemp_5">
+    <widget class="QLCDNumber" name="VALUE_cpu_temp">
      <property name="geometry">
       <rect>
-       <x>440</x>
-       <y>0</y>
-       <width>91</width>
+       <x>10</x>
+       <y>7</y>
+       <width>71</width>
        <height>41</height>
       </rect>
      </property>
      <property name="font">
       <font>
-       <pointsize>10</pointsize>
+       <pointsize>15</pointsize>
        <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
      </property>
-     <property name="styleSheet">
-      <string notr="true"/>
+     <property name="digitCount">
+      <number>3</number>
      </property>
-     <property name="title">
-      <string>Motor Battery</string>
+    </widget>
+    <widget class="QLabel" name="label_192">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>29</y>
+       <width>31</width>
+       <height>21</height>
+      </rect>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
+     <property name="font">
+      <font>
+       <family>Potti Sreeramulu</family>
+       <pointsize>14</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
-     <widget class="QLabel" name="label_196">
-      <property name="geometry">
-       <rect>
-        <x>40</x>
-        <y>22</y>
-        <width>21</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Potti Sreeramulu</family>
-        <pointsize>10</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>V</string>
-      </property>
-     </widget>
-     <widget class="QLCDNumber" name="VALUE_motor_battery">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>20</y>
-        <width>41</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>15</pointsize>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::NoFrame</enum>
-      </property>
-      <property name="digitCount">
-       <number>3</number>
-      </property>
-     </widget>
+     <property name="text">
+      <string>°C</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_193">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>10</y>
+       <width>61</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Potti Sreeramulu</family>
+       <pointsize>13</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>CPU TEMP</string>
+     </property>
+    </widget>
+    <widget class="QLCDNumber" name="VALUE_battery_1">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>7</y>
+       <width>71</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>15</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="digitCount">
+      <number>3</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_194">
+     <property name="geometry">
+      <rect>
+       <x>240</x>
+       <y>10</y>
+       <width>61</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Potti Sreeramulu</family>
+       <pointsize>16</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>BATT 1</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_195">
+     <property name="geometry">
+      <rect>
+       <x>250</x>
+       <y>30</y>
+       <width>16</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Potti Sreeramulu</family>
+       <pointsize>14</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>V</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_196">
+     <property name="geometry">
+      <rect>
+       <x>390</x>
+       <y>10</y>
+       <width>61</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Potti Sreeramulu</family>
+       <pointsize>16</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>BATT 2</string>
+     </property>
+    </widget>
+    <widget class="QLCDNumber" name="VALUE_battery_2">
+     <property name="geometry">
+      <rect>
+       <x>320</x>
+       <y>7</y>
+       <width>71</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>15</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="digitCount">
+      <number>3</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_197">
+     <property name="geometry">
+      <rect>
+       <x>400</x>
+       <y>30</y>
+       <width>16</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Potti Sreeramulu</family>
+       <pointsize>14</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>V</string>
+     </property>
     </widget>
    </widget>
    <widget class="QPlainTextEdit" name="chats">
@@ -817,42 +897,69 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>56</y>
+      <x>10</x>
+      <y>86</y>
       <width>431</width>
-      <height>381</height>
+      <height>351</height>
      </rect>
+    </property>
+    <property name="inputMethodHints">
+     <set>Qt::ImhMultiLine</set>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <property name="backgroundVisible">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="INPUT_message">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>60</y>
+      <width>331</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="inputMethodHints">
+     <set>Qt::ImhNone</set>
+    </property>
+    <property name="placeholderText">
+     <string>Enter text to speak with robot</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="BTN_send">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>60</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Send</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="BTN_disconnect">
+    <property name="geometry">
+     <rect>
+      <x>441</x>
+      <y>447</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Disconnect</string>
     </property>
    </widget>
   </widget>
-  <widget class="QTextEdit" name="input_message">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>510</y>
-     <width>331</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="btn_send">
-   <property name="geometry">
-    <rect>
-     <x>140</x>
-     <y>540</y>
-     <width>113</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Send</string>
-   </property>
-  </widget>
  </widget>
- <resources>
-  <include location="resources.qrc"/>
-  <include location="resources.qrc"/>
-  <include location="../../../ui/resources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
