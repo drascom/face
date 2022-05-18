@@ -2,7 +2,6 @@
 
 import eventlet
 import socketio
-import engineio
 
 sio = socketio.Server()
 app = socketio.WSGIApp(sio)
@@ -14,6 +13,7 @@ def get_device_id(environ):
 
 @sio.event
 def connect(sid, environ):
+    print(environ)
     device_id = get_device_id(environ) or sid
     sio.save_session(sid, {'device_id': device_id})
     print('{} is connected'.format(device_id))

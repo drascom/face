@@ -588,6 +588,64 @@
       <string>PORT:</string>
      </property>
     </widget>
+    <widget class="QLabel" name="LED_connect">
+     <property name="geometry">
+      <rect>
+       <x>540</x>
+       <y>7</y>
+       <width>21</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap>icons/led-red-on.png</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="LED_rx_tx">
+     <property name="geometry">
+      <rect>
+       <x>580</x>
+       <y>5</y>
+       <width>21</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap>icons/rx-tx.png</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
    </widget>
    <widget class="QGroupBox" name="groupBoxCurrentFanStatus_3">
     <property name="geometry">
@@ -608,93 +666,6 @@
     <property name="title">
      <string/>
     </property>
-    <widget class="QGroupBox" name="groupBoxCurrentCPUTemp_6">
-     <property name="geometry">
-      <rect>
-       <x>500</x>
-       <y>-2</y>
-       <width>91</width>
-       <height>46</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <property name="styleSheet">
-      <string notr="true"/>
-     </property>
-     <property name="title">
-      <string>Rx/Tx</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <widget class="QLabel" name="LED_rx_tx">
-      <property name="geometry">
-       <rect>
-        <x>60</x>
-        <y>22</y>
-        <width>21</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::NoFrame</enum>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="pixmap">
-       <pixmap>icons/rx-tx.png</pixmap>
-      </property>
-      <property name="scaledContents">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QLabel" name="LED_connect">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>24</y>
-        <width>21</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::NoFrame</enum>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="pixmap">
-       <pixmap>icons/led-red-on.png</pixmap>
-      </property>
-      <property name="scaledContents">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </widget>
     <widget class="QLCDNumber" name="VALUE_cpu_temp">
      <property name="geometry">
       <rect>
@@ -714,8 +685,17 @@
      <property name="frameShape">
       <enum>QFrame::NoFrame</enum>
      </property>
+     <property name="smallDecimalPoint">
+      <bool>true</bool>
+     </property>
      <property name="digitCount">
-      <number>3</number>
+      <number>2</number>
+     </property>
+     <property name="mode">
+      <enum>QLCDNumber::Dec</enum>
+     </property>
+     <property name="segmentStyle">
+      <enum>QLCDNumber::Flat</enum>
      </property>
     </widget>
     <widget class="QLabel" name="label_192">
@@ -780,7 +760,7 @@
       <enum>QFrame::NoFrame</enum>
      </property>
      <property name="digitCount">
-      <number>3</number>
+      <number>2</number>
      </property>
     </widget>
     <widget class="QLabel" name="label_194">
@@ -788,7 +768,7 @@
       <rect>
        <x>240</x>
        <y>10</y>
-       <width>61</width>
+       <width>81</width>
        <height>21</height>
       </rect>
      </property>
@@ -801,7 +781,7 @@
       </font>
      </property>
      <property name="text">
-      <string>BATT 1</string>
+      <string>BATTERY</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_195">
@@ -822,15 +802,44 @@
       </font>
      </property>
      <property name="text">
-      <string>V</string>
+      <string>%</string>
+     </property>
+    </widget>
+    <widget class="QLCDNumber" name="VALUE_battery_2">
+     <property name="geometry">
+      <rect>
+       <x>360</x>
+       <y>7</y>
+       <width>131</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="smallDecimalPoint">
+      <bool>true</bool>
+     </property>
+     <property name="digitCount">
+      <number>8</number>
+     </property>
+     <property name="segmentStyle">
+      <enum>QLCDNumber::Flat</enum>
      </property>
     </widget>
     <widget class="QLabel" name="label_196">
      <property name="geometry">
       <rect>
-       <x>390</x>
+       <x>520</x>
        <y>10</y>
-       <width>61</width>
+       <width>81</width>
        <height>21</height>
       </rect>
      </property>
@@ -843,51 +852,7 @@
       </font>
      </property>
      <property name="text">
-      <string>BATT 2</string>
-     </property>
-    </widget>
-    <widget class="QLCDNumber" name="VALUE_battery_2">
-     <property name="geometry">
-      <rect>
-       <x>320</x>
-       <y>7</y>
-       <width>71</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>15</pointsize>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
-     <property name="digitCount">
-      <number>3</number>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_197">
-     <property name="geometry">
-      <rect>
-       <x>400</x>
-       <y>30</y>
-       <width>16</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Potti Sreeramulu</family>
-       <pointsize>14</pointsize>
-       <weight>50</weight>
-       <bold>false</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>V</string>
+      <string>TIME LEFT</string>
      </property>
     </widget>
    </widget>
