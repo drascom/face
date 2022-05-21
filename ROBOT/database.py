@@ -13,10 +13,15 @@ class DataRecords:
         cursor.execute('''CREATE TABLE db ( 
         id INTEGER, 
         page NUMERIC DEFAULT (0), 
-        view_camera BOOLEAN DEFAULT (FALSE), 
+        face TEXT DEFAULT('main'), 
+        sfx_link TEXT DEFAULT(''), 
+        voice_link TEXT DEFAULT(''), 
+        function_name TEXT DEFAULT(''), 
+        function_status BOOLEAN DEFAULT(FALSE),
+        data TEXT DEFAULT(''), 
         request_scan BOOLEAN DEFAULT (FALSE), 
         request_capture BOOLEAN DEFAULT (FALSE), 
-        request_view BOOLEAN DEFAULT (FALSE), 
+        request_camera BOOLEAN DEFAULT (FALSE), 
         cpu_temp TEXT DEFAULT(0), 
         battery_1 TEXT DEFAULT(0), 
         battery_2 TEXT DEFAULT(0), 
@@ -82,9 +87,8 @@ class DataRecords:
             data=(value, '0')
             cursor.execute(sql_update_query, data)
             conn.commit()
-            print("DB Gelen Value: ", value)
             status=" activated " if value else " deactivated"
-            print(column + status)
+            # print(column + status)
             self.respond=self.getData()
         else:
             self.respond={'err': column + 'cannot be activated'}

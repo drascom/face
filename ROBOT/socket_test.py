@@ -1,5 +1,5 @@
 import sys
-import threading
+import time
 from datetime import datetime as dt
 from xmlrpc.client import boolean
 from PyQt5.QtGui import QMovie, QPixmap, QImage, QFont
@@ -18,10 +18,73 @@ from Talk import say as Talk
 from Listen import listen_google as Listen
 from ServerBrain import Brain
 
-class Communicate(QObject):
-    MainSignal = pyqtSignal(object)
 
-class WriteSql(QThread):
+class sqlRead(QObject):
+    data_ready_signal = pyqtSignal(object)
+    call_function_signal = pyqtSignal(object)
+    call_page_signal = pyqtSignal(object)
+    call_face_change_signal = pyqtSignal(object)
+    call_play_sfx_signal = pyqtSignal(object)
+    call_play_voice_signal = pyqtSignal(object)
+
+    def __init__(self):
+        super().__init__()
+        self.DataRecords = DataRecords()
+        self.previousFunction = ""
+        self.previousPage = ""
+        self.previousFace = ""
+        self.previousSfx = ""
+        self.previousVoice = ""
+
+    @pyqtSlot()
+    def read_data(self):  # A slot takes no params
+        while True:
+            time.sleep(1)
+            data = self.DataRecords.getData()
+            if data:
+                self.data_ready_signal.emit(data)  # signal recceived data
+                self.find_page(data)
+                self.find_function(data)
+                self.find_face(data)
+                self.find_voice(data)
+
+    def find_page(self, data):
+        if not data['page'] or self.previousPage == data['page']:
+            return
+        self.previousPage = data['page']
+        # signal received new function name
+        self.call_page_signal.emit(data['page'])
+
+    def find_function(self, data):
+        if not data['function_name'] or not data['function_status'] or self.previousFunction == data['function_name']:
+            return
+        self.previousFunction = data['function_name']
+        # signal received new function name
+        self.data_ready_signal.emit(data['function_name'])
+
+    def find_face(self, data):
+        if not data['face'] or self.previousFace == data['face']:
+            return
+        self.previousFace = data['face']
+        self.call_face_change_signal.emit(
+            data['face'])  # signal received new face
+
+    def find_sfx(self, data):
+        if not data['sfx_link'] or self.previousSfx == data['sfx_link']:
+            return
+        self.previousSfx = data['sfx_link']
+        self.call_play_sfx_signal.emit(
+            data['sfx_link'])  # signal received new sfx
+
+    def find_voice(self, data):
+        if not data['voice_link'] or self.previousVoice == data['voice_link']:
+            return
+        self.previousVoice = data['voice_link']
+        self.call_play_voice_signal.emit(
+            data['voice_link'])  # signal received new voice
+
+
+class sqlWrite(QThread):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.DataRecords = DataRecords()
@@ -35,49 +98,6 @@ class WriteSql(QThread):
 
     def stop(self):
         self.ThreadActive = False
-
-
-class ReadSql(QThread):
-    Data = pyqtSignal(object)
-    ScreenTrigger = pyqtSignal(object)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.DataRecords = DataRecords()
-        self.ThreadActive = False
-        self.values = None
-
-    def run(self):
-        self.ThreadActive = True
-        while self.ThreadActive:
-            self.msleep(500)
-            self.values = self.DataRecords.getData()
-            self.Data.emit(self.values)
-            self.ScreenTrigger.emit({'section': self.values['section']})
-
-    def stop(self):
-        self.ThreadActive = False
-
-class FunctionThread(QObject):
-    finished = pyqtSignal()
-    progress = pyqtSignal(int)
-    CameraView = pyqtSignal(object)
-    FunctionSelect = pyqtSignal(object)
-
-    def __init__(self):
-        super(FunctionThread, self).__init__()
-        self.CameraView.connect(self.camera_view)
-        self.FunctionSelect.connect(self.function_select)
-
-    @pyqtSlot(object)
-    def camera_view(self, data):
-        print('T_Id:', threading.get_ident(), data)
-
-    @pyqtSlot(object)
-    def function_select(self, data,):
-        if hasattr(self, data['function_name']):
-            getattr(self, data['function_name'])(data['data'])
-        self.finished.emit()
 
 
 class CameraThread(QThread):
@@ -146,108 +166,30 @@ class ServerThread(QThread):
         self.server.run()
 
 
-class MainThread(QThread):
-    DataUpdate = pyqtSignal(object)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def run(self):
-        while True:
-            pass
-            # command = Listen()
-            # print(command)
-            # self.DataUpdate.emit(command)
-
-
 class CameraScreen(QWidget):
     changeWindow = pyqtSignal(int)
 
     def __init__(self):
         super(CameraScreen, self).__init__()
         loadUi("ROBOT/gui/UI_home.ui", self)
-        self.mainGif.setText("INIT")
-        self.request_view_value = 0
-        self.request_scan_value = 0
-        self.request_capture_value = 0
-        self.timer = QTimer()
 
-    def screen_delay(self):
-        # print("delaying screen...")
-        self.timer.singleShot(3500, lambda: self.change_screen(0))
 
-    def change_screen(self, screen):
-        print("emitted 2")
-        self.changeWindow.emit(screen)
+class ClockScreen(QWidget):
+    changeWindow = pyqtSignal(int)
 
-    # this function runs via other functions
-    def changeText(self, text):
-        self.mainGif.setText(text)
+    def __init__(self):
+        super(ClockScreen, self).__init__()
+        loadUi("ROBOT/gui/UI_clock.ui", self)
+        self.screen_delay = 5
 
-    def update_frame(self, frame):
-        self.mainGif.setPixmap(QPixmap.fromImage(frame))
 
-    def update_gif(self, img_name):
-        self.timer.singleShot(100, lambda: self.play_gif(img_name))
+class WeatherScreen(QWidget):
+    changeWindow = pyqtSignal(int)
 
-    def play_gif(self, img_name):
-        movie = QMovie('images/faces/'+str(img_name)+'.gif')
-        self.mainGif.setMovie(movie)
-        movie.start()
-
-    def _camera_start(self):
-        self.CameraThread.ImageUpdate.connect(self.ImageUpdateSlot)
-        self.CameraThread.PersonUpdate.connect(self.PersonFoundSlot)
-        self.CameraThread.start()
-
-    def _camera_stop(self):
-        print("Camera Stop Called")
-        self.CameraThread.stop()
-
-    def request_view(self, value):
-        if value == 0:
-            return
-        self.request_view_value = value
-        if self.request_view_value == 0:
-            return
-        print("başladı")
-        self.change_screen(1)
-        self.timer.singleShot(10000, self._camera_stop)
-        self.CameraThread.mode = "view"
-        self._camera_start()
-
-    def request_scan(self, value):
-        if self.request_scan_value != value:
-            if value == 1:
-                self.CameraThread.mode = "scan"
-                self._camera_start()
-                self.update_gif('faceid_scan')
-            else:
-                self._camera_stop()
-                self.update_gif('faceid_confirm')
-                self.timer.singleShot(1500, self.change_screen)
-
-            self.request_scan_value = value
-
-    def request_capture(self, value):
-        if self.request_capture_value != value:
-            if value == 1:
-                self.CameraThread.mode = "capture"
-                self._camera_start()
-            else:
-                self._camera_stop()
-                self.timer.singleShot(
-                    1500, lambda:  self.update_gif('wakeup'))
-        self.request_capture_value = value
-
-    # those functions runs  with camera thread
-
-    def ImageUpdateSlot(self, Image):
-        self.update_frame(Image)
-
-    def PersonFoundSlot(self, name):
-        # self.update_gif('faceid_confirm')
-        print('[INFO] User Found: ', name)
+    def __init__(self):
+        super(WeatherScreen, self).__init__()
+        loadUi("ROBOT/gui/UI_weather.ui", self)
+        self.screen_delay = 2
 
 
 class HomeScreen(QWidget):
@@ -255,15 +197,13 @@ class HomeScreen(QWidget):
 
     def __init__(self):
         super(HomeScreen, self).__init__()
-        loadUi("ROBOT/gui/UI_home.ui", self)
-        self.timer = QTimer()
-
-    def delay(self):
-        # print("delaying screen...")
-        self.timer.singleShot(3500, self.change_screen)
-
-    def change_screen(self):
-        print("changing screen")
+        VBL = QVBoxLayout(self)
+        self.mainGif = QLabel("1")
+        self.mainGif.setText("home")
+        self.mainGif.setScaledContents(True)
+        VBL.setContentsMargins(0, 0, 0, 0)
+        VBL.addWidget(self.mainGif)
+        self.setLayout(VBL)
 
 
 class TopBar(QWidget):
@@ -290,7 +230,7 @@ class TopBar(QWidget):
         self.currentPage = 0
 
         hbox = QHBoxLayout(self)
-        hbox.setContentsMargins(10, 0, 10, 0)
+        hbox.setContentsMargins(0, 0, 0, 0)
         hbox.addWidget(self.BTN_1)
         hbox.addWidget(self.labelTime, alignment=Qt.AlignRight)
         hbox.addWidget(self.BTN_2)
@@ -310,57 +250,166 @@ class TopBar(QWidget):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.resize(640, 480)
+    sqlWrite = sqlWrite()
+    Server = ServerThread()
 
+    def __init__(self):
+        super().__init__()
+        self.resize(400, 300)
+        self.obj = sqlRead()  # no parent!
+        self.thread = QThread()  # no parent!
+        self.obj.moveToThread(self.thread)
+        self.thread.started.connect(self.obj.read_data)
+        self.thread.start()
+        self.worker = ServerThread()
+        self.worker.start()
+        # self.obj.data_ready_signal.connect(self.onIntReady)
+        # * - Thread finished signal will end thread if you need!
+        # self.obj.finished.connect(self.thread.quit)
+        # * - Thread finished signal will close the app if you want!
+        # self.thread.finished.connect(app.exit)
+
+        self.obj.call_function_signal.connect(self.run_function)
+        self.obj.call_page_signal.connect(self.change_page)
+        self.obj.call_face_change_signal.connect(self.change_face)
+        # self.call_play_sfx_signal.connect(self.play_sfx)
+        # self.call_play_voice_signal.connect(self.play_voice)
+        self.initUI()
+        self.initData()
+
+    def initUI(self):
         self.centralwidget = QWidget(self)
         self.setCentralWidget(self.centralwidget)
 
+        self.VBL = QVBoxLayout(self.centralwidget)
+        self.VBL.setContentsMargins(0, 0, 0, 0)
         self.topbar = TopBar()
-        VBL = QVBoxLayout(self.centralwidget)
-        VBL.setContentsMargins(0, 0, 0, 0)
-        VBL.addWidget(self.topbar)
-        self.topbar.changeWindow.connect(self.default_screen)
+        self.VBL.addWidget(self.topbar)
+        self.topbar.changeWindow.connect(self.change_page)
 
-        self.screens = QStackedLayout()
-        VBL.addLayout(self.screens)
-        # self.showMaximized()
-        self.screenList = {
-            'settings_screen': 0,
-            'camera_screen': 1,
-            'weather_screen': 2,
-            'time_screen': 3,
-            'alarm_screen': 4,
+        self.pages = QStackedLayout()
+        self.VBL.addLayout(self.pages)
+        self.page_list = {
+            'HomeScreen': HomeScreen(),
+            'ClockScreen': ClockScreen(),
+            'WeatherScreen': WeatherScreen()
         }
-        for index, item in enumerate([HomeScreen(), CameraScreen(), ]):
-            screenName = "screen_"+str(index)
-            setattr(self, screenName, item)
-            self.screens.addWidget(getattr(self, screenName))
-            getattr(self, screenName).changeWindow.connect(self.default_screen)
+        for key, value in self.page_list.items():
+            setattr(self, key, value)
+            self.pages.addWidget(getattr(self, key))
 
-        self.screens.setCurrentIndex(0)
-        self.worker = ServerThread()
-        self.worker.start()
+    def initData(self):
+        self.timer = QTimer()
+        self.current_timer = None
+        self.pages.setCurrentIndex(0)
+        self.change_face('love')
 
-    def default_screen(self, page):
-        if page >= 0 and page <= len(self.screens):
-            self.screens.setCurrentIndex(page)
-            self.topbar.currentPage = page
+    def run_function(self, data):
+        print("home data", data)
+        if hasattr(self, data['function_name']):
+            getattr(self, data['function_name'])(data['data'])
 
-    def change_screen(self, data):
+    def changeText(self, text):
+        self.mainGif.setText(text)
+
+    def update_gif(self, img_name):
+        self.timer.singleShot(100, lambda: self.play_gif(img_name))
+
+    def ImageUpdateSlot(self, Image):
+        self.update_frame(Image)
+
+    def PersonFoundSlot(self, name):
+        # self.update_gif('faceid_confirm')
+        print('[INFO] User Found: ', name)
+
+    def change_face(self, img_name):
+        def _change_face(self, img_name):
+            print("face change", img_name)
+            movie = QMovie('ROBOT/images/faces/'+str(img_name)+'.gif')
+            self.HomeScreen.mainGif.setMovie(movie)
+            movie.start()
+
+        _change_face(self,img_name)
+        self.timer.singleShot(3000, lambda: _change_face(self, 'main'))
+
+    def check(data):
+        print("test", data)
+    # triggerred via topbar buttons or sql page value
+
+    def change_page(self, page):
         # if new screen different than existing one
-        if data['section'] != self.screens.currentIndex():
-            # set current screen index to new one
-            self.screens.setCurrentIndex(int(data['section']))
-            # if there is a delay function of current widget run it
-            if hasattr(self.screens.currentWidget(), "delay"):
-                self.screens.currentWidget().delay()
+        if (int(page) < 0 or int(page) > len(self.pages)-1) or page == self.pages.currentIndex():
+            return
+        # set current screen index to new one
+        self.sqlWrite.run("page", page)
+        self.pages.setCurrentIndex(page)
+        self.topbar.currentPage = page
+        # if there is a delay function of current widget run it
+        if hasattr(self.pages.currentWidget(), 'screen_delay'):
+            self.delay(getattr(self.pages.currentWidget(), 'screen_delay'))
+
+    def delay(self, second):
+        print("second", second)
+        if second == 0:
+            return
+        if self.current_timer:
+            self.current_timer.stop()
+            self.current_timer.deleteLater()
+        self.current_timer = QTimer()
+        self.current_timer.timeout.connect(lambda: self.change_page(0))
+        self.current_timer.setSingleShot(True)
+        self.current_timer.start(second*1000)
+
+    def _camera_start(self):
+        self.CameraThread.ImageUpdate.connect(self.ImageUpdateSlot)
+        self.CameraThread.PersonUpdate.connect(self.PersonFoundSlot)
+        self.CameraThread.start()
+
+    def _camera_stop(self):
+        print("Camera Stop Called")
+        self.CameraThread.stop()
+
+    def request_view(self, value):
+        if value == 0:
+            return
+        self.request_view_value = value
+        if self.request_view_value == 0:
+            return
+        print("başladı")
+        self.change_page(1)
+        self.timer.singleShot(10000, self._camera_stop)
+        self.CameraThread.mode = "view"
+        self._camera_start()
+
+    def request_scan(self, value):
+        if self.request_scan_value != value:
+            if value == 1:
+                self.CameraThread.mode = "scan"
+                self._camera_start()
+                self.update_gif('faceid_scan')
+            else:
+                self._camera_stop()
+                self.update_gif('faceid_confirm')
+                self.timer.singleShot(1500, self.change_page)
+
+            self.request_scan_value = value
+
+    def request_capture(self, value):
+        if self.request_capture_value != value:
+            if value == 1:
+                self.CameraThread.mode = "capture"
+                self._camera_start()
+            else:
+                self._camera_stop()
+                self.timer.singleShot(
+                    1500, lambda:  self.update_gif('wakeup'))
+        self.request_capture_value = value
 
 
 if __name__ == "__main__":
     App = QApplication(sys.argv)
     App.setStyle('Breeze')
     Root = MainWindow()
+    Root.resize(400, 300)
     Root.show()
     sys.exit(App.exec())

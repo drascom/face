@@ -24,11 +24,15 @@ def connect(sid, environ):
 # this function run on demand
 @sio.on('send')
 def send(sid, data):
-    task = sio.start_background_task(start_sensors)
+    #tek key value gelirse
+    # key = [k for k, v in data.items()][0]
+    # value = data[key]
+    for key, value in data.items():
+        save = DB.saveData(key,value)
     sio.sleep(.2)
-    response = DB.getData()
     session = sio.get_session(sid)
-    print('Received data from {}: {}'.format(session['device_id'], data))
+    # print('Received data from {}: {}'.format(session['device_id'], data))
+    response = f"{key} değeri {value} olarak değişti."
     sio.emit('receive', response)
 
 # this function running real time
@@ -37,8 +41,6 @@ def talk(sid):
     task = sio.start_background_task(start_sensors)
     sio.sleep(.2)
     response = DB.getData()
-    # session = sio.get_session(sid)
-    # print('Received -> Sent to {}'.format(session['device_id']))
     sio.emit('listen', response)
 
 
@@ -46,7 +48,6 @@ def talk(sid):
 def disconnect(sid):
     print('disconnect ', sid)
     
-
 def run():
     print("Server Started")
     eventlet.wsgi.server(eventlet.listen(
@@ -55,4 +56,3 @@ def run():
 # use when you need to run standalone
 if __name__ == '__main__':
     run()
-    collect()

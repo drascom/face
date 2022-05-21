@@ -24,11 +24,8 @@ class SocketClient(QThread):
         self.ip = '192.168.2.19'
         self.port = 5000
         self.host = 'http://%s:%s' % (self.ip, self.port)
-        self.reconnect = False
         self.connStatus.connect(self.logging)
-        self.sio.on('receive', self.receive)
-        self.sio.on('listen', self.listen)
-        self.sio.on('disconnect', self.server_disconnect)
+        self.reconnect = True
 
     def set_host(self, ip, port):
         self.ip = ip
@@ -38,28 +35,32 @@ class SocketClient(QThread):
         self.connect(self.host)
 
     def connect(self, host):
-
         if not self.sio.connected:
+            self.sio.on('receive', self.receive)
+            self.sio.on('listen', self.listen)
             try:
                 self.sio.connect(host)
                 self.connStatus.emit(True)
+                # self.add_log.emit('Connection to the server has been completed.')
             except socketio.exceptions.ConnectionError as err:
+                # self.add_log.emit('Server not found! Try again...')
                 self.connStatus.emit(False)
+            else:
+                pass
             time.sleep(1)
 
     # real time
     def talk(self):
-        if self.sio.connected:
+        if not self.sio.connected:
             try:
                 self.sio.emit('talk')
             except:
                 self.connStatus.emit(False)
-        else:
-            self.connStatus.emit(False)
+        self.run()
     # real time
 
     def listen(self, msg):
-        if self.sio.connected:
+        if socketio.sio.connected:
             if msg:
                 self.connStatus.emit(True)
                 # this data will process
@@ -75,8 +76,8 @@ class SocketClient(QThread):
         except:
             self.add_log.emit('[Server] %s' %
                               ("Cant send message to server"))
-    # on demand
 
+    # on demand
     def receive(self, msg):
         if self.sio.connected:
             if msg:
@@ -90,14 +91,6 @@ class SocketClient(QThread):
             self.reconnect = status
             self.add_log.emit('Connected to the server :)') if status else self.add_log.emit(
                 'Server not found! Searching !...')
-
-    def server_disconnect(self):
-        print("I'm disconnected!")
-
-    def client_disconnect(self):
-        self.sio.disconnect()
-
-
 class ChatWindow(QMainWindow, ui_form):
     def __init__(self):
         super().__init__()
@@ -117,25 +110,13 @@ class ChatWindow(QMainWindow, ui_form):
         self.sc.dataUpdate.connect(self.read_values)
         self.sc.connStatus.connect(self.enable_send_button)
 
+        self.BTN_camera.clicked.connect(
+            lambda: self.start_function(['request_camera', self.BTN_camera.isChecked()]))
         self.BTN_main.clicked.connect(lambda: self.change_page(0))
         self.BTN_clock.clicked.connect(lambda: self.change_page(1))
         self.BTN_weather.clicked.connect(lambda: self.change_page(2))
         self.BTN_send.clicked.connect(self.send_message)
         self.BTN_connect.clicked.connect(self.socket_connection)
-
-        self.BTN_camera.clicked.connect(
-            lambda: self.start_function(['request_camera', self.BTN_camera.isChecked()]))
-        self.faces = [
-            "angry", "cool", 
-            "faceid_confirm", "faceid_error", "faceid_scan", 
-            "found", "funny", "listening",
-            "love", "notfound", "nowifi", 
-            "recognise", "sad", "scan_confirm", 
-            "searching", "searchwifi", 
-            "wakeup", "yeswifi"]
-        for face in self.faces:
-            self.LIST_faces.addItem(face)
-        self.LIST_faces.currentTextChanged.connect(self.change_face)
 
     def enable_send_button(self, status):
         self.connStatus = status
@@ -147,9 +128,6 @@ class ChatWindow(QMainWindow, ui_form):
         self.CONNECTION_BAR.setEnabled(not status)
         self.LED_connect.setPixmap(
             QPixmap('icons/led-green-on.png' if status else 'icons/led-red-on.png'))
-        self.LED_rx_tx.setPixmap(QPixmap(
-            'icons/rx-tx-on.png' if (self.flipImage % 2) == 0 else 'icons/rx-tx.png'))
-        self.flipImage += 1
 
     def read_values(self, data):
         for key, value in data.items():
@@ -198,11 +176,14 @@ class ChatWindow(QMainWindow, ui_form):
             self.timer.start(500)
 
     def socket_quit(self):
-        # sys.exit()
-        self.sc.client_disconnect()
-
+        self.sc.quit()
+    
     def realtime_comminication(self):
         self.sc.talk()
+
+        self.LED_rx_tx.setPixmap(QPixmap(
+            'icons/rx-tx-on.png' if (self.flipImage % 2) == 0 else 'icons/rx-tx.png'))
+        self.flipImage += 1
 
     def send_message(self, msg):
         if not self.connStatus:
@@ -217,13 +198,8 @@ class ChatWindow(QMainWindow, ui_form):
         package = {'page': page}
         self.send_message(package)
 
-    def start_function(self, function, status, data):
-        package = {'function_name': function,
-                   'function_status': status, 'data': data}
-        self.send_message(package)
-
-    def change_face(self, face):
-        package = {'face': face}
+    def start_function(self, data):
+        package = {'function_name': data[0], 'function_status': data[1]}
         self.send_message(package)
 
     @pyqtSlot(object)

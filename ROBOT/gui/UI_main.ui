@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>340</width>
-    <height>259</height>
+    <width>658</width>
+    <height>436</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,7 +29,7 @@
    <string notr="true">  background-color: black;
   color: white;</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
+  <widget class="QWidget" name="VL">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
      <horstretch>0</horstretch>
@@ -76,7 +76,7 @@
        <height>0</height>
       </size>
      </property>
-     <widget class="QLabel" name="home_img">
+     <widget class="QLabel" name="mainGif">
       <property name="geometry">
        <rect>
         <x>0</x>
@@ -113,9 +113,6 @@
       </property>
       <property name="text">
        <string/>
-      </property>
-      <property name="pixmap">
-       <pixmap>faces/searchwifi.gif</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
