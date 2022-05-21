@@ -94,7 +94,7 @@
        <string>Scan</string>
       </property>
       <property name="checkable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="BTN_capture">
@@ -110,7 +110,7 @@
        <string>Record</string>
       </property>
       <property name="checkable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <property name="checked">
        <bool>false</bool>
@@ -229,7 +229,7 @@
        <string>Think</string>
       </property>
       <property name="checkable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="BTN_talk">
@@ -245,7 +245,7 @@
        <string>Talk</string>
       </property>
       <property name="checkable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="BTN_listen">
@@ -261,7 +261,7 @@
        <string>Listen</string>
       </property>
       <property name="checkable">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
      </widget>
      <widget class="QLabel" name="LED_think">
@@ -546,19 +546,6 @@
     <property name="title">
      <string/>
     </property>
-    <widget class="QPushButton" name="BTN_connect">
-     <property name="geometry">
-      <rect>
-       <x>431</x>
-       <y>7</y>
-       <width>101</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Connect</string>
-     </property>
-    </widget>
     <widget class="QTextEdit" name="INPUT_ip">
      <property name="geometry">
       <rect>
@@ -1330,19 +1317,6 @@ font: 75 11pt &quot;Ubuntu Condensed&quot;;</string>
      <string>Send</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="BTN_disconnect">
-    <property name="geometry">
-     <rect>
-      <x>441</x>
-      <y>507</y>
-      <width>101</width>
-      <height>30</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Disconnect</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="LED_connect">
     <property name="geometry">
      <rect>
@@ -1370,6 +1344,19 @@ font: 75 11pt &quot;Ubuntu Condensed&quot;;</string>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="BTN_connect">
+    <property name="geometry">
+     <rect>
+      <x>439</x>
+      <y>508</y>
+      <width>101</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Connect</string>
     </property>
    </widget>
   </widget>

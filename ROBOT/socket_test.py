@@ -58,9 +58,10 @@ class sqlRead(QObject):
     def find_function(self, data):
         if not data['function_name'] or not data['function_status'] or self.previousFunction == data['function_name']:
             return
+        print(data["function_name"])
         self.previousFunction = data['function_name']
         # signal received new function name
-        self.data_ready_signal.emit(data['function_name'])
+        self.call_function_signal.emit({'name':data['function_name'],'status':data['function_status'],'data':data['data']})
 
     def find_face(self, data):
         if not data['face'] or self.previousFace == data['face']:
@@ -306,9 +307,11 @@ class MainWindow(QMainWindow):
 
     def run_function(self, data):
         print("home data", data)
-        if hasattr(self, data['function_name']):
-            getattr(self, data['function_name'])(data['data'])
-
+        if hasattr(self, data['name']):
+            getattr(self, data['name'])(data['data'])
+    
+    def open_camera(self,data):
+        print("camera opened")
     def changeText(self, text):
         self.mainGif.setText(text)
 

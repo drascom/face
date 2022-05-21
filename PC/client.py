@@ -106,8 +106,6 @@ class ChatWindow(QMainWindow, ui_form):
         self.INPUT_ip.setPlainText("192.168.2.19")
         self.INPUT_port.setPlainText("5000")
         self.BTN_send.setDisabled(True)
-        self.BTN_disconnect.hide()
-        self.BTN_disconnect.clicked.connect(self.socket_quit)
         self.connStatus = False
         self.flipImage = 0
         self.sc = SocketClient(self)
@@ -115,16 +113,15 @@ class ChatWindow(QMainWindow, ui_form):
         self.timer.timeout.connect(self.realtime_comminication)
         self.sc.add_log.connect(self.add_chat)
         self.sc.dataUpdate.connect(self.read_values)
-        self.sc.connStatus.connect(self.enable_send_button)
+        self.sc.connStatus.connect(self.check_connection)
 
         self.BTN_main.clicked.connect(lambda: self.change_page(0))
         self.BTN_clock.clicked.connect(lambda: self.change_page(1))
         self.BTN_weather.clicked.connect(lambda: self.change_page(2))
         self.BTN_send.clicked.connect(self.send_message)
         self.BTN_connect.clicked.connect(self.socket_connection)
-
         self.BTN_camera.clicked.connect(
-            lambda: self.start_function(['request_camera', self.BTN_camera.isChecked()]))
+            lambda: self.start_function('open_camera', self.BTN_camera.isChecked()))
         self.faces = [
             "angry", "cool", 
             "faceid_confirm", "faceid_error", "faceid_scan", 
@@ -137,12 +134,12 @@ class ChatWindow(QMainWindow, ui_form):
             self.LIST_faces.addItem(face)
         self.LIST_faces.currentTextChanged.connect(self.change_face)
 
-    def enable_send_button(self, status):
+    def check_connection(self, status):
         self.connStatus = status
         if status:
-            self.BTN_disconnect.show()
+            self.BTN_connect.setText("Disconnect")
         else:
-            self.BTN_disconnect.hide()
+            self.BTN_connect.setText("Connect")
         self.BTN_send.setEnabled(status)
         self.CONNECTION_BAR.setEnabled(not status)
         self.LED_connect.setPixmap(
@@ -185,21 +182,17 @@ class ChatWindow(QMainWindow, ui_form):
     def socket_connection(self):
         ip = self.INPUT_ip.toPlainText()
         port = self.INPUT_port.toPlainText()
-
         if (not ip) or (not port):
             self.add_chat('The ip or port number is empty.')
             return
-
         self.sc.set_host(ip, port)
 
         if not self.connStatus:
             self.sc.start()
             # realtime loop starts here
             self.timer.start(500)
-
-    def socket_quit(self):
-        # sys.exit()
-        self.sc.client_disconnect()
+        if self.connStatus:
+            self.sc.client_disconnect()
 
     def realtime_comminication(self):
         self.sc.talk()
@@ -217,9 +210,10 @@ class ChatWindow(QMainWindow, ui_form):
         package = {'page': page}
         self.send_message(package)
 
-    def start_function(self, function, status, data):
+    def start_function(self, function, status, data=""):
         package = {'function_name': function,
                    'function_status': status, 'data': data}
+        print("sending function",package)
         self.send_message(package)
 
     def change_face(self, face):

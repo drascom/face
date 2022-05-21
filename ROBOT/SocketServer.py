@@ -29,11 +29,11 @@ def send(sid, data):
     # value = data[key]
     for key, value in data.items():
         save = DB.saveData(key,value)
-    sio.sleep(.2)
-    session = sio.get_session(sid)
+        response = f"{key} değeri {value} olarak değişti."
+        sio.emit('receive', response)
+        sio.sleep(.2)
+    # session = sio.get_session(sid)
     # print('Received data from {}: {}'.format(session['device_id'], data))
-    response = f"{key} değeri {value} olarak değişti."
-    sio.emit('receive', response)
 
 # this function running real time
 @sio.on('talk')
