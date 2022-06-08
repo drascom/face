@@ -10,12 +10,12 @@ from rich.console import Console
 from keras.models import load_model
 
 lemmatizer = WordNetLemmatizer()
-intents = json.load(open("ROBOT/json/intents.json", encoding="utf-8"))
+intents = json.load(open("json/intents.json", encoding="utf-8"))
 
-words = pickle.load(open("ROBOT/models/model_nltk/words.pkl", "rb"))  # nosec
-classes = pickle.load(open("ROBOT/models/model_nltk/classes.pkl", "rb"))  # nosec
-types = pickle.load(open("ROBOT/models/model_nltk/types.pkl", "rb"))  # nosec
-model = load_model("ROBOT/models/model_nltk/chatbotmodel.h5")
+words = pickle.load(open("models/model_nltk/words.pkl", "rb"))  # nosec
+classes = pickle.load(open("models/model_nltk/classes.pkl", "rb"))  # nosec
+types = pickle.load(open("models/model_nltk/types.pkl", "rb"))  # nosec
+model = load_model("models/model_nltk/chatbotmodel.h5")
 
 console = Console()
 

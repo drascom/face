@@ -1,2 +1,6 @@
 #to see qt plugins errors
 export QT_DEBUG_PLUGINS=1
+
+to install opencv
+pip install opencv-contrib-python
+sudo apt install libgtk2.0-dev

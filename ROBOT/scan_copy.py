@@ -12,7 +12,7 @@ import cv2
 #Initialize 'currentname' to trigger only when a new person is identified.
 currentname = "Bilmiyorum"
 #Determine faces from encodings.pickle file model created from train_model.py
-encodingsP = "camera/encodings.pickle"
+encodingsP = "ROBOT/camera/encodings.pickle"
 
 # load the known faces and embeddings along with OpenCV's Haar
 # cascade for face detection

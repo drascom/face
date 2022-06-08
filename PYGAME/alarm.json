@@ -1,0 +1,18 @@
+{
+    "alarms": {
+        "daily": "08:30",
+        "status": "on",
+        "by_day": {
+            "Mon": "06:15",
+            "Tue": "06:15",
+            "Wed": "06:15",
+            "Thu": "06:15",
+            "Fri": "08:00",
+            "Sat": "09:00",
+            "Sun": "10:00"
+        },
+        "sound": "alarms/08Ocean.mp3",
+        "initial_volume": 0,
+        "final_volume": 30
+    }
+}

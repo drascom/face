@@ -94,7 +94,7 @@
        <string>Scan</string>
       </property>
       <property name="checkable">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="BTN_capture">
@@ -110,7 +110,7 @@
        <string>Record</string>
       </property>
       <property name="checkable">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <property name="checked">
        <bool>false</bool>
@@ -364,7 +364,7 @@
      <property name="title">
       <string>Screen</string>
      </property>
-     <widget class="QPushButton" name="BTN_main">
+     <widget class="QPushButton" name="BTN_home">
       <property name="geometry">
        <rect>
         <x>40</x>
@@ -374,10 +374,10 @@
        </rect>
       </property>
       <property name="text">
-       <string>Main</string>
+       <string>Home</string>
       </property>
       <property name="checkable">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="BTN_weather">
@@ -393,7 +393,7 @@
        <string>Weather</string>
       </property>
       <property name="checkable">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QPushButton" name="BTN_clock">
@@ -409,10 +409,10 @@
        <string>Clock</string>
       </property>
       <property name="checkable">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="LED_page_0">
+     <widget class="QLabel" name="LED_home">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -441,7 +441,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="LED_page_1">
+     <widget class="QLabel" name="LED_clock">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -470,7 +470,7 @@
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QLabel" name="LED_page_2">
+     <widget class="QLabel" name="LED_weather">
       <property name="geometry">
        <rect>
         <x>10</x>

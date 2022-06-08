@@ -301,7 +301,9 @@ class WeatherScreen(Window):
         self.sql_connection = UpdateSql()
         self.timer = QTimer()
 
-    def delay(self):
+    def 
+    
+    (self):
         # print("delaying screen...")
         self.timer.singleShot(3500, self.change_screen)
 

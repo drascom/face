@@ -5,7 +5,7 @@ from unittest import result
 class DataRecords:
     def __init__(self):
         self.respond = {}
-        conn = sqlite3.connect('ROBOT/main.db')
+        conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
         # Drop the DB table if already exists.
         cursor.execute("DROP TABLE IF EXISTS DB")
@@ -31,7 +31,7 @@ class DataRecords:
         self.initDefaults()
 
     def initDefaults(self):
-        conn=sqlite3.connect('ROBOT/main.db')
+        conn=sqlite3.connect('main.db')
         cursor=conn.cursor()
         sql_insert_query="INSERT INTO  DB ('id') VALUES (?)"
         data=('0')
@@ -41,7 +41,7 @@ class DataRecords:
         conn.commit()
 
     def getData(self):
-        conn=sqlite3.connect('ROBOT/main.db')
+        conn=sqlite3.connect('main.db')
         cursor=conn.cursor()
         row_as_dict=None
         output_obj=cursor.execute(
@@ -59,7 +59,7 @@ class DataRecords:
         conn.commit()
 
     def getColumn(self, column):
-        conn=sqlite3.connect('ROBOT/main.db')
+        conn=sqlite3.connect('main.db')
         cursor=conn.cursor()
         row_as_dict=None
         output_obj=cursor.execute(
@@ -77,7 +77,7 @@ class DataRecords:
         conn.commit()
 
     def saveData(self, column, value):
-        conn=sqlite3.connect('ROBOT/main.db')
+        conn=sqlite3.connect('main.db')
         cursor=conn.cursor()
 
         exist=cursor.execute(

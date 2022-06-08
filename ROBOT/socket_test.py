@@ -13,7 +13,7 @@ import SocketServer as Server
 from pathlib import Path
 
 from database import DataRecords
-from Camera import scan_face, capture_face, convert_image, train_data
+from scan_pyqt import CameraThread
 from Talk import say as Talk
 from Listen import listen_google as Listen
 from ServerBrain import Brain
@@ -31,6 +31,7 @@ class sqlRead(QObject):
         super().__init__()
         self.DataRecords = DataRecords()
         self.previousFunction = ""
+        self.previousStatus = ""
         self.previousPage = ""
         self.previousFace = ""
         self.previousSfx = ""
@@ -56,12 +57,17 @@ class sqlRead(QObject):
         self.call_page_signal.emit(data['page'])
 
     def find_function(self, data):
-        if not data['function_name'] or not data['function_status'] or self.previousFunction == data['function_name']:
+        if not data['function_name'] :
             return
+        if self.previousFunction == data['function_name'] and self.previousStatus == data['function_status']:
+            return
+        if self.previousFunction != data['function_name']  and not data['function_status']:
+            return   
         print(data["function_name"])
         self.previousFunction = data['function_name']
         # signal received new function name
-        self.call_function_signal.emit({'name':data['function_name'],'status':data['function_status'],'data':data['data']})
+        self.call_function_signal.emit(
+            {'name': data['function_name'], 'status': data['function_status'], 'data': data['data']})
 
     def find_face(self, data):
         if not data['face'] or self.previousFace == data['face']:
@@ -91,70 +97,14 @@ class sqlWrite(QThread):
         self.DataRecords = DataRecords()
         self.ThreadActive = False
 
-    def run(self, function_name, value):
+    def save(self,data):
         self.ThreadActive = True
-        while self.ThreadActive:
-            self.DataRecords.saveData(function_name, value)
+        for key, value in data.items():
+            self.DataRecords.saveData(key,value)
             self.stop()
 
     def stop(self):
         self.ThreadActive = False
-
-
-class CameraThread(QThread):
-    ImageUpdate = pyqtSignal(QImage)
-    PersonUpdate = pyqtSignal(object)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.ThreadActive = False
-        self.mode = None
-
-    def run(self):
-        print("Camera Mode: ", self.mode)
-        self.ThreadActive = True
-        # start camera
-        self.capture = cv2.VideoCapture(0)
-        if self.mode == "view":
-            while self.ThreadActive:
-                ret, frame = self.capture.read()
-                if ret:
-                    Pic = convert_image(frame)
-                    self.ImageUpdate.emit(Pic)
-                else:
-                    # if camera is not pluggedin try again
-                    self.capture.release()
-                    self.capture = cv2.VideoCapture(0)
-            self.capture.release()
-        elif self.mode == "scan":
-            # stop openvc camera imutils will open camera again
-            self.capture.release()
-            person = scan_face()
-            if person:
-                self.PersonUpdate.emit(person)
-            return
-        elif self.mode == "capture":
-            # name = input('isim > ')
-            name = "a"
-            Path("camera/dataset/"+name).mkdir(parents=True, exist_ok=True)
-            img_counter = 1
-            while img_counter < 150:
-                ret, frame = self.capture.read()
-                if not ret:
-                    print("failed to grab frame")
-                    break
-                pic = convert_image(frame)
-                self.ImageUpdate.emit(pic)
-                if img_counter % 6 == 0:
-                    capture_face(frame, name, img_counter)
-                img_counter += 1
-            self.capture.release()
-            self.PersonUpdate.emit("a")
-            train_data()
-
-    def stop(self):
-        self.ThreadActive = False
-        self.quit()
 
 
 class ServerThread(QThread):
@@ -167,20 +117,12 @@ class ServerThread(QThread):
         self.server.run()
 
 
-class CameraScreen(QWidget):
-    changeWindow = pyqtSignal(int)
-
-    def __init__(self):
-        super(CameraScreen, self).__init__()
-        loadUi("ROBOT/gui/UI_home.ui", self)
-
-
 class ClockScreen(QWidget):
     changeWindow = pyqtSignal(int)
 
     def __init__(self):
         super(ClockScreen, self).__init__()
-        loadUi("ROBOT/gui/UI_clock.ui", self)
+        loadUi("gui/UI_clock.ui", self)
         self.screen_delay = 5
 
 
@@ -189,7 +131,7 @@ class WeatherScreen(QWidget):
 
     def __init__(self):
         super(WeatherScreen, self).__init__()
-        loadUi("ROBOT/gui/UI_weather.ui", self)
+        loadUi("gui/UI_weather.ui", self)
         self.screen_delay = 2
 
 
@@ -202,8 +144,12 @@ class HomeScreen(QWidget):
         self.mainGif = QLabel("1")
         self.mainGif.setText("home")
         self.mainGif.setScaledContents(True)
+        self.videoGif = QLabel("1")
+        self.videoGif.setScaledContents(True)
+        self.videoGif.hide()
         VBL.setContentsMargins(0, 0, 0, 0)
         VBL.addWidget(self.mainGif)
+        VBL.addWidget(self.videoGif)
         self.setLayout(VBL)
 
 
@@ -251,30 +197,43 @@ class TopBar(QWidget):
 
 
 class MainWindow(QMainWindow):
-    sqlWrite = sqlWrite()
-    Server = ServerThread()
 
     def __init__(self):
         super().__init__()
         self.resize(400, 300)
+        
+        # sql thread
         self.obj = sqlRead()  # no parent!
         self.thread = QThread()  # no parent!
         self.obj.moveToThread(self.thread)
-        self.thread.started.connect(self.obj.read_data)
-        self.thread.start()
-        self.worker = ServerThread()
-        self.worker.start()
-        # self.obj.data_ready_signal.connect(self.onIntReady)
-        # * - Thread finished signal will end thread if you need!
-        # self.obj.finished.connect(self.thread.quit)
-        # * - Thread finished signal will close the app if you want!
-        # self.thread.finished.connect(app.exit)
-
         self.obj.call_function_signal.connect(self.run_function)
         self.obj.call_page_signal.connect(self.change_page)
         self.obj.call_face_change_signal.connect(self.change_face)
+        self.thread.started.connect(self.obj.read_data) # <- this thread start immedetaly
+        self.thread.start()
+        #functions
         # self.call_play_sfx_signal.connect(self.play_sfx)
         # self.call_play_voice_signal.connect(self.play_voice)
+        
+        #slqWrite thread
+        self.sqlWrite = sqlWrite()
+        
+        #socket server thread
+        self.worker = ServerThread()
+        self.worker.start()
+        
+        # camera thread
+        self.obj2 = CameraThread()
+        self.thread2 = QThread()  # no parent!
+        self.obj2.moveToThread(self.thread2)
+        self.obj2.image_update_signal.connect(self.update_frame_slot)
+        self.thread2.start()
+        # self.obj2.call_scan.emit() # <- this thread start with spesific emits from related method(can be multiple) 
+
+        # * - Thread finished signal will end thread if you need!
+        # * - Thread finished signal will close the app if you want!
+        # self.thread.finished.connect(app.exit)
+
         self.initUI()
         self.initData()
 
@@ -303,51 +262,17 @@ class MainWindow(QMainWindow):
         self.timer = QTimer()
         self.current_timer = None
         self.pages.setCurrentIndex(0)
-        self.change_face('love')
-
-    def run_function(self, data):
-        print("home data", data)
-        if hasattr(self, data['name']):
-            getattr(self, data['name'])(data['data'])
-    
-    def open_camera(self,data):
-        print("camera opened")
-    def changeText(self, text):
-        self.mainGif.setText(text)
-
-    def update_gif(self, img_name):
-        self.timer.singleShot(100, lambda: self.play_gif(img_name))
-
-    def ImageUpdateSlot(self, Image):
-        self.update_frame(Image)
-
-    def PersonFoundSlot(self, name):
-        # self.update_gif('faceid_confirm')
-        print('[INFO] User Found: ', name)
-
-    def change_face(self, img_name):
-        def _change_face(self, img_name):
-            print("face change", img_name)
-            movie = QMovie('ROBOT/images/faces/'+str(img_name)+'.gif')
-            self.HomeScreen.mainGif.setMovie(movie)
-            movie.start()
-
-        _change_face(self,img_name)
-        self.timer.singleShot(3000, lambda: _change_face(self, 'main'))
-
-    def check(data):
-        print("test", data)
-    # triggerred via topbar buttons or sql page value
+        # self.change_face('love')
 
     def change_page(self, page):
         # if new screen different than existing one
         if (int(page) < 0 or int(page) > len(self.pages)-1) or page == self.pages.currentIndex():
             return
         # set current screen index to new one
-        self.sqlWrite.run("page", page)
+        self.sqlWrite.save({"page": page})
         self.pages.setCurrentIndex(page)
         self.topbar.currentPage = page
-        # if there is a delay function of current widget run it
+        # if there is a delay function in current widget run it
         if hasattr(self.pages.currentWidget(), 'screen_delay'):
             self.delay(getattr(self.pages.currentWidget(), 'screen_delay'))
 
@@ -363,14 +288,52 @@ class MainWindow(QMainWindow):
         self.current_timer.setSingleShot(True)
         self.current_timer.start(second*1000)
 
-    def _camera_start(self):
-        self.CameraThread.ImageUpdate.connect(self.ImageUpdateSlot)
-        self.CameraThread.PersonUpdate.connect(self.PersonFoundSlot)
-        self.CameraThread.start()
+    def run_function(self, data):
+        print("run function data", data)
+        if hasattr(self, data['name']):
+            getattr(self, data['name'])(data)
 
-    def _camera_stop(self):
-        print("Camera Stop Called")
-        self.CameraThread.stop()
+    def changeText(self, text):
+        self.mainGif.setText(text)
+
+    def change_gif(self, img_name):
+        self.timer.singleShot(100, lambda: self.change_gif(img_name))
+
+    def change_face(self, img_name):
+        def _change_face(self, img_name):
+            print("face change", img_name)
+            movie = QMovie('images/faces/'+str(img_name)+'.gif')
+            self.HomeScreen.mainGif.setMovie(movie)
+            movie.start()
+
+        _change_face(self, img_name)
+        self.timer.singleShot(5000, lambda: _change_face(self, 'main'))
+
+   #  camera functions
+    def open_camera(self, data):
+        print("camera opened")
+        if data['status'] == 0:
+            print("Camera Stop Called")
+            self.obj2.call_stop.emit() 
+            self.sqlWrite.save({'function_name':'','function_status':0,'data':''})#revert database to old state
+            self.HomeScreen.mainGif.clear()
+            self.change_face('main')
+            
+        else:
+            print("Camera Start Called")
+            self.obj2.call_scan.emit() 
+            self.sqlWrite.save({'function_name':'','function_status':0,'data':''})#revert database to old state
+
+    def update_frame_slot(self, frame):
+        self.HomeScreen.mainGif.setPixmap(QPixmap.fromImage(frame))
+
+    def face_confirmed_slot(self, name):
+        # self.update_gif('faceid_confirm')
+        print('[INFO] User Found: ', name)
+
+    def check(data):
+        print("test", data)
+    # triggerred via topbar buttons or sql page value
 
     def request_view(self, value):
         if value == 0:

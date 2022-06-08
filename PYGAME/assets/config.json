@@ -1,0 +1,6 @@
+{
+    "version": "1.4.0",
+    "ds_api_key": "API_KEY_HERE",
+    "alarm": "08:30",
+    "alarm_status": "on"
+}
